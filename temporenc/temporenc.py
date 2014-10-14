@@ -11,6 +11,7 @@ SUPPORTED_TYPES = set([
 ])
 
 STRUCT_32 = struct.Struct('>L')
+STRUCT_32_16 = struct.Struct('>LH')
 
 
 def packb(
@@ -71,5 +72,8 @@ def packb(
     elif type == 'T':
         # Format: 1010000T TTTTTTTT TTTTTTTT
         return STRUCT_32.pack(0b1010000 << 17 | t)[1:]
+    elif type == 'DT':
+        # Format: 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT TTTTTTTT
+        return STRUCT_32_16.pack(d << 1 | t >> 16, t & 0xffff)[1:]
 
     raise NotImplementedError()

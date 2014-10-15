@@ -137,7 +137,7 @@ def packb(
         n <<= size
         n |= value
 
-    assert total_size % 8 == 0
+    assert total_size % 8 == 0  # FIXME remove once all types are implemented
     return to_bytes(n, total_size // 8)
 
 
@@ -153,7 +153,7 @@ def unpackb(value):
     first = value[0]
 
     if first <= 0b00111111:  # tag 00
-        type = TYPES['DT']
+        typespec = TYPES['DT']
         value = value.rjust(8, b'\x00')
         (n,) = unpack('>Q', value.rjust(8, b'\x00'))
 
@@ -161,11 +161,11 @@ def unpackb(value):
         raise NotImplementedError("DTS")
 
     elif first <= 0b10011111:  # tag 100
-        type = TYPES['D']
+        typespec = TYPES['D']
         (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
 
     elif first <= 0b10100001:  # tag 1010000
-        type = TYPES['T']
+        typespec = TYPES['T']
         (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
 
     elif first <= 0b10111111:
@@ -179,7 +179,7 @@ def unpackb(value):
 
     # Iteratively shift off components from the numerical value
     kwargs = dict.fromkeys(Value._fields)
-    for name, size, mask, min_value, max_value, empty in reversed(type):
+    for name, size, mask, min_value, max_value, empty in reversed(typespec):
         decoded = n & mask
 
         if decoded == empty:

@@ -11,8 +11,8 @@ PY3 = sys.version_info[0] == 3
 # Compatibility helpers
 #
 
-# struct.unpack() does not handle bytearray() in Python < 2.7
 if sys.version_info[:2] <= (2, 6):
+    # struct.unpack() does not handle bytearray() in Python < 2.7
     def unpack(fmt, value):
         return struct.unpack(fmt, buffer(value))
 else:
@@ -38,11 +38,11 @@ else:
 
 
 #
-# Components descriptions
+# Components and types
 #
-# Composite components like date and time are
-# split to make the implementation simpler. Each component is a tuple
-# with these components:
+# Composite components like date and time are split to make the
+# implementation simpler. Each component is a tuple with these
+# components:
 #
 #   (name, size, mask, min_value, max_value, empty)
 #
@@ -59,10 +59,6 @@ COMPONENT_NANOSECOND = ('nanosecond', 30, 0x3fffffff, 0, 999999999, None)
 COMPONENT_PADDING_2 = ('padding', 2, 0x2, 0, 0, None)
 COMPONENT_PADDING_4 = ('padding', 4, 0x4, 0, 0, None)
 COMPONENT_PADDING_6 = ('padding', 6, 0x6, 0, 0, None)
-
-#
-# Type descriptions
-#
 
 SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
 

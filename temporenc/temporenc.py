@@ -1,5 +1,18 @@
 
 import struct
+import sys
+
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+# Compatibility hack:
+# struct.unpack() does not handle bytearray() in Python < 2.7
+if sys.version_info[:2] <= (2, 6):
+    def unpack(fmt, value):
+        return struct.unpack(fmt, buffer(value))
+else:
+    unpack = struct.unpack
+
 
 SUPPORTED_TYPES = set([
     'D',

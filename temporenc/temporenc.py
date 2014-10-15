@@ -207,11 +207,11 @@ def unpackb(value):
 
     elif first <= 0b10011111:  # tag 100
         typespec = TYPE_D
-        (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
+        (n,) = unpack('>L', value.rjust(4, b'\x00'))
 
     elif first <= 0b10100001:  # tag 1010000
         typespec = TYPE_T
-        (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
+        (n,) = unpack('>L', value.rjust(4, b'\x00'))
 
     elif first <= 0b10111111:
         raise ValueError("first byte does not contain a valid tag")

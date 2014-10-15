@@ -15,17 +15,6 @@ if sys.version_info[:2] <= (2, 6):
 else:
     unpack = struct.unpack
 
-
-SUPPORTED_TYPES = set([
-    'D',
-    'T',
-    'DT',
-    'DTZ',
-    'DTS',
-    'DTSZ',
-])
-
-
 STRUCT_32 = struct.Struct('>L')
 STRUCT_32_16 = struct.Struct('>LH')
 
@@ -57,6 +46,9 @@ TYPES = {
         COMPONENT_HOUR,
         COMPONENT_MINUTE,
         COMPONENT_SECOND),
+    'DTZ': (),  # TODO
+    'DTS': (),  # TODO
+    'DTSZ': (),  # TODO,
 }
 
 # Magic values indicating empty parts
@@ -84,7 +76,7 @@ def packb(
     """
 
     # Input validation
-    if type not in SUPPORTED_TYPES:
+    if type not in TYPES:
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
     if year is None:

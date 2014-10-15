@@ -32,14 +32,9 @@ if PY2:
         # Temporenc values are always 3-10 bytes.
         assert False, "value too large"
 
-    def from_bytes(value):
-        raise NotImplementedError()
-
 else:
     def to_bytes(value, size):
         return value.to_bytes(size, 'big')
-
-    from_bytes = int.from_bytes
 
 
 #

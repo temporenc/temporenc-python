@@ -95,6 +95,19 @@ TYPE_DTS_NONE = (
     COMPONENT_PADDING_6)
 TYPE_DTSZ = ()  # TODO,
 
+TYPE_DETECTION_MAP = {
+    # This maps (D, T, S) tuples of booleans to the most suitable type
+    (False, False, False): 'D',
+    (False, False, True): 'DTS',
+    (False, True, False): 'T',
+    (False, True, True): 'DTS',
+    (True, False, False): 'D',
+    (True, False, True): 'DTS',
+    (True, True, False): 'DT',
+    (True, True, True): 'DTS',
+}
+
+
 Value = collections.namedtuple('Value', [
     'year', 'month', 'day', 'hour', 'minute', 'second'])
 
@@ -111,7 +124,13 @@ def packb(
     :rtype: bytes
     """
 
-    if type not in SUPPORTED_TYPES:
+    if type is None:
+        has_d = not (year is None and month is None and day is None)
+        has_t = not (hour is None and minute is None and second is None)
+        has_s = not (millisecond is None and microsecond is None
+                     and nanosecond is None)
+        type = TYPE_DETECTION_MAP[has_d, has_t, has_s]
+    elif type not in SUPPORTED_TYPES:
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
     # Month and day are stored off-by-one.
@@ -153,6 +172,9 @@ def packb(
         else:
             n = 0b0111
             typespec = TYPE_DTS_NONE
+
+    else:
+        raise NotImplementedError()
 
     # Pack the components
     for name, size, mask, min_value, max_value, empty in typespec:

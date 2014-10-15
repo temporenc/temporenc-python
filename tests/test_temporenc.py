@@ -81,3 +81,20 @@ def test_type_dts():
         hour=18, minute=25, second=12)
     dts_none = from_hex('77 bf 07 49 93 00')
     assert actual == dts_none
+
+
+def test_type_detection():
+
+    # Type D
+    assert len(temporenc.packb(year=1983)) == 3
+
+    # Type T
+    assert len(temporenc.packb(hour=18)) == 3
+
+    # Type DT
+    assert len(temporenc.packb(year=1983, hour=18)) == 5
+
+    # Type DTS
+    assert len(temporenc.packb(millisecond=0)) == 7
+    assert len(temporenc.packb(microsecond=0)) == 8
+    assert len(temporenc.packb(nanosecond=0)) == 9

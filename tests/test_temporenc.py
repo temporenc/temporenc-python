@@ -14,11 +14,11 @@ def test_type_d():
     expected = from_hex('8f 7e 0e')
     assert actual == expected
 
-    # parsed = temporenc.unpackb(expected)
-    # assert parsed.year == 1983
-    # assert parsed.month == 1
-    # assert parsed.day == 15
-    # assert parsed.hour is None
+    parsed = temporenc.unpackb(expected)
+    assert parsed.year == 1983
+    assert parsed.month == 1
+    assert parsed.day == 15
+    assert parsed.hour is None
 
 
 def test_type_t():
@@ -26,11 +26,11 @@ def test_type_t():
     expected = from_hex('a1 26 4c')
     assert actual == expected
 
-    # parsed = temporenc.unpackb(expected)
-    # assert parsed.hour == 18
-    # assert parsed.minute == 25
-    # assert parsed.second == 12
-    # assert parsed.year is None
+    parsed = temporenc.unpackb(expected)
+    assert parsed.hour == 18
+    assert parsed.minute == 25
+    assert parsed.second == 12
+    assert parsed.year is None
 
 
 def test_type_dt():
@@ -42,11 +42,11 @@ def test_type_dt():
     expected = from_hex('1e fc 1d 26 4c')
     assert actual == expected
 
-    # parsed = temporenc.unpackb(expected)
-    # assert parsed.year == 1983
-    # assert parsed.month == 1
-    # assert parsed.day == 15
-    # assert parsed.hour == 18
-    # assert parsed.minute == 25
-    # assert parsed.second == 12
+    parsed = temporenc.unpackb(expected)
+    assert parsed.year == 1983
+    assert parsed.month == 1
+    assert parsed.day == 15
+    assert parsed.hour == 18
+    assert parsed.minute == 25
+    assert parsed.second == 12
     # assert parsed.microsecond is None

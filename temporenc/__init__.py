@@ -8,5 +8,5 @@ from .temporenc import (  # noqa
     # pack,  # TODO: implement
     packb,
     # unpack,  # TODO: implement
-    # unpackb,  # TODO: implement
+    unpackb,
 )

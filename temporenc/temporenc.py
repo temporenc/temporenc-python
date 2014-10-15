@@ -10,8 +10,17 @@ SUPPORTED_TYPES = set([
     'DTSZ',
 ])
 
+
 STRUCT_32 = struct.Struct('>L')
 STRUCT_32_16 = struct.Struct('>LH')
+
+# Magic values indicating empty parts
+YEAR_EMPTY = 4095
+MONTH_EMPTY = 15
+DAY_EMPTY = 31
+HOUR_EMPTY = 31
+MINUTE_EMPTY = 63
+SECOND_EMPTY = 63
 
 
 def packb(
@@ -30,32 +39,32 @@ def packb(
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
     if year is None:
-        year = 4095
+        year = YEAR_EMPTY
     elif not 0 <= year <= 4094:
         raise ValueError("'year' not in supported range")
 
     if month is None:
-        month = 15
+        month = MONTH_EMPTY
     elif not 1 <= month <= 12:
         raise ValueError("'month' not in supported range")
 
     if day is None:
-        day = 31
+        day = DAY_EMPTY
     elif not 1 <= day <= 31:
         raise ValueError("'day' not in supported range")
 
     if hour is None:
-        hour = 31
+        hour = HOUR_EMPTY
     elif not 0 <= hour <= 23:
         raise ValueError("'hour' not in supported range")
 
     if minute is None:
-        minute = 63
+        minute = MINUTE_EMPTY
     elif not 0 <= minute <= 59:
         raise ValueError("'minute' not in supported range")
 
     if second is None:
-        second = 63
+        second = SECOND_EMPTY
     elif not 1 <= second <= 60:
         raise ValueError("'second' not in supported range")
 

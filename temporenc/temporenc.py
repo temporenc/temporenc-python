@@ -167,22 +167,24 @@ def unpackb(value):
 
     # Iteratively shift off components from the numerical value
     kwargs = dict.fromkeys(Value._fields)
-    for name, size, mask, min_value, max_value, empty_value in reversed(type):
+    for name, size, mask, min_value, max_value, empty in reversed(type):
         decoded = n & mask
-        if decoded == empty_value:
+
+        if decoded == empty:
             continue
 
         if not min_value <= decoded <= max_value:
             raise ValueError(
                 "{0} {1:d} not in range [{2:d}, {3:d}]".format(
                     name, decoded, min_value, max_value))
+
         kwargs[name] = decoded
         n >>= size
 
     # Both month and day are stored off-by-one.
-    if kwargs.get('month') is not None:
+    if kwargs['month'] is not None:
         kwargs['month'] += 1
-    if kwargs.get('day') is not None:
+    if kwargs['day'] is not None:
         kwargs['day'] += 1
 
     return Value(**kwargs)

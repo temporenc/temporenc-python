@@ -7,7 +7,10 @@ import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
-# Compatibility hack:
+#
+# Compatibility helpers
+#
+
 # struct.unpack() does not handle bytearray() in Python < 2.7
 if sys.version_info[:2] <= (2, 6):
     def unpack(fmt, value):
@@ -15,13 +18,40 @@ if sys.version_info[:2] <= (2, 6):
 else:
     unpack = struct.unpack
 
-STRUCT_32 = struct.Struct('>L')
-STRUCT_32_16 = struct.Struct('>LH')
+if PY2:
+    def to_bytes(value, size):
+        if size <= 8:
+            return struct.pack('>Q', value)[-size:]
 
-# Components descriptions; composite components like date and time are
+        if size <= 10:
+            return struct.pack(
+                '>HQ',
+                (value >> 64) & 0xffff,
+                value & 0xffffffffffffffff)[-size:]
+
+        # Temporenc values are always 3-10 bytes.
+        assert False, "value too large"
+
+    def from_bytes(value):
+        raise NotImplementedError()
+
+else:
+    def to_bytes(value, size):
+        return value.to_bytes(size, 'big')
+
+    from_bytes = int.from_bytes
+
+
+#
+# Components descriptions
+#
+# Composite components like date and time are
 # split to make the implementation simpler. Each component is a tuple
 # with these components:
-#   (name, size, mask, min-value, max-value, empty-value)
+#
+#   (name, size, mask, min_value, max_value, empty)
+#
+
 COMPONENT_YEAR = ('year', 12, 0b111111111111, 0, 4094, 4095)
 COMPONENT_MONTH = ('month', 4, 0b1111, 0, 11, 15)
 COMPONENT_DAY = ('day', 5, 0b11111, 0, 30, 31)
@@ -29,23 +59,17 @@ COMPONENT_HOUR = ('hour', 5, 0b11111, 0, 23, 31)
 COMPONENT_MINUTE = ('minute', 6, 0b111111, 0, 59, 63)
 COMPONENT_SECOND = ('second', 6, 0b111111, 0, 60, 63)
 
+#
 # Type descriptions
+#
+# These are (size, components) tuples
+#
+
 TYPES = {
-    'D': (
-        COMPONENT_YEAR,
-        COMPONENT_MONTH,
-        COMPONENT_DAY),
-    'T': (
-        COMPONENT_HOUR,
-        COMPONENT_MINUTE,
-        COMPONENT_SECOND),
-    'DT': (
-        COMPONENT_YEAR,
-        COMPONENT_MONTH,
-        COMPONENT_DAY,
-        COMPONENT_HOUR,
-        COMPONENT_MINUTE,
-        COMPONENT_SECOND),
+    'D': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY),
+    'T': (COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
+    'DT': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+           COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
     'DTZ': (),  # TODO
     'DTS': (),  # TODO
     'DTSZ': (),  # TODO,
@@ -75,58 +99,46 @@ def packb(
     :rtype: bytes
     """
 
-    # Input validation
-    if type not in TYPES:
+    typespec = TYPES.get(type)
+    if typespec is None:
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
-    if year is None:
-        year = YEAR_EMPTY
-    elif not 0 <= year <= 4094:
-        raise ValueError("'year' not in supported range")
+    # Month and day are stored off-by-one.
+    if month is not None:
+        month -= 1
+    if day is not None:
+        day -= 1
 
-    if month is None:
-        month = MONTH_EMPTY
-    elif not 1 <= month <= 12:
-        raise ValueError("'month' not in supported range")
-
-    if day is None:
-        day = DAY_EMPTY
-    elif not 1 <= day <= 31:
-        raise ValueError("'day' not in supported range")
-
-    if hour is None:
-        hour = HOUR_EMPTY
-    elif not 0 <= hour <= 23:
-        raise ValueError("'hour' not in supported range")
-
-    if minute is None:
-        minute = MINUTE_EMPTY
-    elif not 0 <= minute <= 59:
-        raise ValueError("'minute' not in supported range")
-
-    if second is None:
-        second = SECOND_EMPTY
-    elif not 1 <= second <= 60:
-        raise ValueError("'second' not in supported range")
-
-    # Component packing
-    if 'D' in type:
-        d = (year << 9) | (month - 1 << 5) | (day - 1)
-    if 'T' in type:
-        t = (hour << 12) | (minute << 6) | (second)
+    kwargs = locals()  # ugly, but it works :)
 
     # Byte packing
     if type == 'D':
-        # Format: 100DDDDD DDDDDDDD DDDDDDDD
-        return STRUCT_32.pack(0b100 << 21 | d)[1:]
+        n = 0b100
+        total_size = 3
     elif type == 'T':
-        # Format: 1010000T TTTTTTTT TTTTTTTT
-        return STRUCT_32.pack(0b1010000 << 17 | t)[1:]
+        n = 0b1010000
+        total_size = 7
     elif type == 'DT':
-        # Format: 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT TTTTTTTT
-        return STRUCT_32_16.pack(d << 1 | t >> 16, t & 0xffff)[1:]
+        n = 0b00
+        total_size = 2
 
-    raise NotImplementedError()
+    # Pack the components
+    for name, size, mask, min_value, max_value, empty in typespec:
+        value = kwargs[name]
+
+        if value is None:
+            value = empty
+        elif not min_value <= value <= max_value:
+            raise ValueError(
+                "{0} {1:d} not in range [{2:d}, {3:d}]".format(
+                    name, value, min_value, max_value))
+
+        total_size += size
+        n <<= size
+        n |= value
+
+    assert total_size % 8 == 0
+    return to_bytes(n, total_size // 8)
 
 
 def unpackb(value):

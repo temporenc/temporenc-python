@@ -52,12 +52,18 @@ else:
 #   (name, size, mask, min_value, max_value, empty)
 #
 
-COMPONENT_YEAR = ('year', 12, 0b111111111111, 0, 4094, 4095)
-COMPONENT_MONTH = ('month', 4, 0b1111, 0, 11, 15)
-COMPONENT_DAY = ('day', 5, 0b11111, 0, 30, 31)
-COMPONENT_HOUR = ('hour', 5, 0b11111, 0, 23, 31)
-COMPONENT_MINUTE = ('minute', 6, 0b111111, 0, 59, 63)
-COMPONENT_SECOND = ('second', 6, 0b111111, 0, 60, 63)
+COMPONENT_YEAR = ('year', 12, 0xfff, 0, 4094, 4095)
+COMPONENT_MONTH = ('month', 4, 0xf, 0, 11, 15)
+COMPONENT_DAY = ('day', 5, 0x1f, 0, 30, 31)
+COMPONENT_HOUR = ('hour', 5, 0x1f, 0, 23, 31)
+COMPONENT_MINUTE = ('minute', 6, 0x3f, 0, 59, 63)
+COMPONENT_SECOND = ('second', 6, 0x3f, 0, 60, 63)
+COMPONENT_MILLISECOND = ('millisecond', 10, 0x3ff, 0, 999, None)
+COMPONENT_MICROSECOND = ('microsecond', 20, 0xfffff, 0, 999999, None)
+COMPONENT_NANOSECOND = ('nanosecond', 30, 0x3fffffff, 0, 999999999, None)
+COMPONENT_PADDING_2 = ('padding', 2, 0x2, 0, 0, None)
+COMPONENT_PADDING_4 = ('padding', 4, 0x4, 0, 0, None)
+COMPONENT_PADDING_6 = ('padding', 6, 0x6, 0, 0, None)
 
 #
 # Type descriptions
@@ -65,13 +71,25 @@ COMPONENT_SECOND = ('second', 6, 0b111111, 0, 60, 63)
 # These are (size, components) tuples
 #
 
+SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
 TYPES = {
     'D': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY),
     'T': (COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
     'DT': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
            COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
     'DTZ': (),  # TODO
-    'DTS': (),  # TODO
+    'DTS-10': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+               COMPONENT_MILLISECOND, COMPONENT_PADDING_4),
+    'DTS-20': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+               COMPONENT_MICROSECOND, COMPONENT_PADDING_2),
+    'DTS-30': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+               COMPONENT_NANOSECOND),
+    'DTS-0': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+              COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+              COMPONENT_PADDING_6),
     'DTSZ': (),  # TODO,
 }
 
@@ -91,7 +109,8 @@ Value = collections.namedtuple('Value', [
 def packb(
         type=None,
         year=None, month=None, day=None,
-        hour=None, minute=None, second=None):
+        hour=None, minute=None, second=None,
+        millisecond=None, microsecond=None, nanosecond=None):
     """
     Pack date and time information into a byte string.
 
@@ -99,8 +118,7 @@ def packb(
     :rtype: bytes
     """
 
-    typespec = TYPES.get(type)
-    if typespec is None:
+    if type not in SUPPORTED_TYPES:
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
     # Month and day are stored off-by-one.
@@ -109,18 +127,39 @@ def packb(
     if day is not None:
         day -= 1
 
+    padding = 0
     kwargs = locals()  # ugly, but it works :)
 
     # Byte packing
     if type == 'D':
+        typespec = TYPES['D']
         n = 0b100
-        total_size = 3
+        bits_used = 3
+
     elif type == 'T':
+        typespec = TYPES['T']
         n = 0b1010000
-        total_size = 7
+        bits_used = 7
+
     elif type == 'DT':
+        typespec = TYPES['DT']
         n = 0b00
-        total_size = 2
+        bits_used = 2
+
+    elif type == 'DTS':
+        bits_used = 4  # combined type tag and precision tag
+        if nanosecond is not None:
+            n = 0b0110
+            typespec = TYPES['DTS-30']
+        elif microsecond is not None:
+            n = 0b0101
+            typespec = TYPES['DTS-20']
+        elif millisecond is not None:
+            n = 0b0100
+            typespec = TYPES['DTS-10']
+        else:
+            n = 0b0111
+            typespec = TYPES['DTS-0']
 
     # Pack the components
     for name, size, mask, min_value, max_value, empty in typespec:
@@ -133,12 +172,12 @@ def packb(
                 "{0} {1:d} not in range [{2:d}, {3:d}]".format(
                     name, value, min_value, max_value))
 
-        total_size += size
+        bits_used += size
         n <<= size
         n |= value
 
-    assert total_size % 8 == 0  # FIXME remove once all types are implemented
-    return to_bytes(n, total_size // 8)
+    assert bits_used % 8 == 0  # FIXME remove once all types are implemented
+    return to_bytes(n, bits_used // 8)
 
 
 def unpackb(value):

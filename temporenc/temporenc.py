@@ -68,30 +68,32 @@ COMPONENT_PADDING_6 = ('padding', 6, 0x6, 0, 0, None)
 #
 # Type descriptions
 #
-# These are (size, components) tuples
-#
 
 SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
-TYPES = {
-    'D': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY),
-    'T': (COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
-    'DT': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-           COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND),
-    'DTZ': (),  # TODO
-    'DTS-10': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-               COMPONENT_MILLISECOND, COMPONENT_PADDING_4),
-    'DTS-20': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-               COMPONENT_MICROSECOND, COMPONENT_PADDING_2),
-    'DTS-30': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-               COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-               COMPONENT_NANOSECOND),
-    'DTS-0': (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-              COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-              COMPONENT_PADDING_6),
-    'DTSZ': (),  # TODO,
-}
+
+TYPE_D = (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY)
+TYPE_T = (COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND)
+TYPE_DT = (
+    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND)
+TYPE_DTZ = ()  # TODO
+TYPE_DTS_MS = (
+    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+    COMPONENT_MILLISECOND, COMPONENT_PADDING_4)
+TYPE_DTS_US = (
+    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+    COMPONENT_MICROSECOND, COMPONENT_PADDING_2)
+TYPE_DTS_NS = (
+    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+    COMPONENT_NANOSECOND)
+TYPE_DTS_NONE = (
+    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
+    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
+    COMPONENT_PADDING_6)
+TYPE_DTSZ = ()  # TODO,
 
 # Magic values indicating empty parts
 YEAR_EMPTY = 4095
@@ -132,17 +134,17 @@ def packb(
 
     # Byte packing
     if type == 'D':
-        typespec = TYPES['D']
+        typespec = TYPE_D
         n = 0b100
         bits_used = 3
 
     elif type == 'T':
-        typespec = TYPES['T']
+        typespec = TYPE_T
         n = 0b1010000
         bits_used = 7
 
     elif type == 'DT':
-        typespec = TYPES['DT']
+        typespec = TYPE_DT
         n = 0b00
         bits_used = 2
 
@@ -150,16 +152,16 @@ def packb(
         bits_used = 4  # combined type tag and precision tag
         if nanosecond is not None:
             n = 0b0110
-            typespec = TYPES['DTS-30']
+            typespec = TYPE_DTS_NS
         elif microsecond is not None:
             n = 0b0101
-            typespec = TYPES['DTS-20']
+            typespec = TYPE_DTS_US
         elif millisecond is not None:
             n = 0b0100
-            typespec = TYPES['DTS-10']
+            typespec = TYPE_DTS_MS
         else:
             n = 0b0111
-            typespec = TYPES['DTS-0']
+            typespec = TYPE_DTS_NONE
 
     # Pack the components
     for name, size, mask, min_value, max_value, empty in typespec:
@@ -192,7 +194,7 @@ def unpackb(value):
     first = value[0]
 
     if first <= 0b00111111:  # tag 00
-        typespec = TYPES['DT']
+        typespec = TYPE_DT
         value = value.rjust(8, b'\x00')
         (n,) = unpack('>Q', value.rjust(8, b'\x00'))
 
@@ -200,11 +202,11 @@ def unpackb(value):
         raise NotImplementedError("DTS")
 
     elif first <= 0b10011111:  # tag 100
-        typespec = TYPES['D']
+        typespec = TYPE_D
         (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
 
     elif first <= 0b10100001:  # tag 1010000
-        typespec = TYPES['T']
+        typespec = TYPE_T
         (n,) = unpack('>L', bytes(value.rjust(4, b'\x00')))
 
     elif first <= 0b10111111:

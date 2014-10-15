@@ -95,15 +95,6 @@ TYPE_DTS_NONE = (
     COMPONENT_PADDING_6)
 TYPE_DTSZ = ()  # TODO,
 
-# Magic values indicating empty parts
-YEAR_EMPTY = 4095
-MONTH_EMPTY = 15
-DAY_EMPTY = 31
-HOUR_EMPTY = 31
-MINUTE_EMPTY = 63
-SECOND_EMPTY = 63
-
-
 Value = collections.namedtuple('Value', [
     'year', 'month', 'day', 'hour', 'minute', 'second'])
 

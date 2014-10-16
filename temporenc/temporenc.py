@@ -240,21 +240,15 @@ def unpackb(value):
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSS0000
             millisecond = n >> 4 & MILLISECOND_MASK
-            microsecond = millisecond * 1000
-            nanosecond = microsecond * 1000
         elif precision == 1:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
             microsecond = n >> 2 & MICROSECOND_MASK
-            millisecond = microsecond // 1000
-            nanosecond = microsecond * 1000
         elif precision == 2:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
             # SSSSSSSS
             nanosecond = n & NANOSECOND_MASK
-            microsecond = nanosecond // 1000
-            millisecond = microsecond // 1000
         elif precision == 3:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TT000000
@@ -288,7 +282,7 @@ def unpackb(value):
         raise NotImplementedError("DTSZ")
 
     #
-    # Split components
+    # Split D and T components
     #
 
     if d is None:
@@ -304,6 +298,20 @@ def unpackb(value):
         hour = t >> 12 & HOUR_MASK
         minute = t >> 6 & MINUTE_MASK
         second = t & SECOND_MASK
+
+    #
+    # Sub-second fields are either all None, or none are None.
+    #
+
+    if millisecond is not None:
+        microsecond = millisecond * 1000
+        nanosecond = microsecond * 1000
+    elif microsecond is not None:
+        millisecond = microsecond // 1000
+        nanosecond = microsecond * 1000
+    elif nanosecond is not None:
+        microsecond = nanosecond // 1000
+        millisecond = microsecond // 1000
 
     return Value(
         year, month, day,

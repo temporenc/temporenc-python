@@ -65,7 +65,8 @@ def packb(
         type=None,
         year=None, month=None, day=None,
         hour=None, minute=None, second=None,
-        millisecond=None, microsecond=None, nanosecond=None):
+        millisecond=None, microsecond=None, nanosecond=None,
+        tz_offset=None):
     """
     Pack date and time information into a byte string.
 
@@ -82,8 +83,13 @@ def packb(
         has_t = not (hour is None and minute is None and second is None)
         has_s = not (millisecond is None and microsecond is None
                      and nanosecond is None)
+        has_z = tz_offset is not None
 
-        if has_s:
+        if has_z and has_s:
+            type = 'DTSZ'
+        elif has_z:
+            type = 'DTZ'
+        elif has_s:
             type = 'DTS'
         elif has_d and has_t:
             type = 'DT'

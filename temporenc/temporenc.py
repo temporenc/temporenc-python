@@ -211,7 +211,7 @@ def unpackb(value):
 
         if not len(value) == 5:
             raise ValueError(
-                "DT values must be 5 bytes; got {0:d}".format(len(value)))
+                "DT value must be 5 bytes; got {0:d}".format(len(value)))
 
         n = unpack_8(value)
         d = n >> 17 & D_MASK
@@ -225,7 +225,7 @@ def unpackb(value):
 
         if not len(value) == 3:
             raise ValueError(
-                "D values must be 3 bytes; got {0:d}".format(len(value)))
+                "D value must be 3 bytes; got {0:d}".format(len(value)))
 
         d = unpack_4(value) & D_MASK
 
@@ -234,7 +234,7 @@ def unpackb(value):
 
         if not len(value) == 3:
             raise ValueError(
-                "T values must be 3 bytes; got {0:d}".format(len(value)))
+                "T value must be 3 bytes; got {0:d}".format(len(value)))
 
         t = unpack_4(value) & T_MASK
 

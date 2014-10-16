@@ -38,6 +38,15 @@ else:
 
 
 #
+# Byte packing helpers
+#
+
+pack_4 = struct.Struct('>L').pack
+pack_8 = struct.Struct('>Q').pack
+pack_2_8 = struct.Struct('>HQ').pack
+
+
+#
 # Components and types
 #
 # Composite components like date and time are split to make the
@@ -46,6 +55,16 @@ else:
 #
 #   (name, size, mask, min_value, max_value, empty)
 #
+
+YEAR_MIN, YEAR_MAX, YEAR_EMPTY, YEAR_MASK = 0, 4094, 4095, 0xfff
+MONTH_MIN, MONTH_MAX, MONTH_EMPTY, MONTH_MASK = 0, 11, 15, 0xf
+DAY_MIN, DAY_MAX, DAY_EMPTY, DAY_MASK = 0, 30, 31, 0x1f
+HOUR_MIN, HOUR_MAX, HOUR_EMPTY, HOUR_MASK = 0, 23, 31, 0x1f
+MINUTE_MIN, MINUTE_MAX, MINUTE_EMPTY, MINUTE_MASK = 0, 59, 63, 0x3f
+SECOND_MIN, SECOND_MAX, SECOND_EMPTY, SECOND_MASK = 0, 60, 63, 0x3f
+MILLISECOND_MIN, MILLISECOND_MAX, MILLISECOND_MASK = 0, 999, 0x3ff
+MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
+NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
 
 COMPONENT_YEAR = ('year', 12, 0xfff, 0, 4094, 4095)
 COMPONENT_MONTH = ('month', 4, 0xf, 0, 11, 15)
@@ -103,7 +122,10 @@ def packb(
     :rtype: bytes
     """
 
-    # Automatically detect the most compact type if no type was specified.
+    #
+    # Type detection
+    #
+
     if type is None:
         has_d = not (year is None and month is None and day is None)
         has_t = not (hour is None and minute is None and second is None)
@@ -125,66 +147,100 @@ def packb(
     elif type not in SUPPORTED_TYPES:
         raise ValueError("invalid temporenc type: {0!r}".format(type))
 
-    # Month and day are stored off-by-one.
-    if month is not None:
+    #
+    # Value checking
+    #
+
+    if year is None:
+        year = YEAR_EMPTY
+    elif not YEAR_MIN <= year <= YEAR_MAX:
+        raise ValueError("'year' not within supported range")
+
+    if month is None:
+        month = MONTH_EMPTY
+    else:
         month -= 1
-    if day is not None:
+        if not MONTH_MIN <= month <= MONTH_MAX:
+            raise ValueError("'month' not within supported range")
+
+    if day is None:
+        day = DAY_EMPTY
+    else:
         day -= 1
+        if not DAY_MIN <= day <= DAY_MAX:
+            raise ValueError("'day' not within supported range")
 
-    padding = 0
-    kwargs = locals()  # ugly, but it works :)
+    if hour is None:
+        hour = HOUR_EMPTY
+    elif not HOUR_MIN <= hour <= HOUR_MAX:
+        raise ValueError("'hour' not within supported range")
 
+    if minute is None:
+        minute = MINUTE_EMPTY
+    elif not MINUTE_MIN <= minute <= MINUTE_MAX:
+        raise ValueError("'minute' not within supported range")
+
+    if second is None:
+        second = SECOND_EMPTY
+    elif not SECOND_MIN <= second <= SECOND_MAX:
+        raise ValueError("'second' not within supported range")
+
+    if (millisecond is not None
+            and not MILLISECOND_MIN <= millisecond <= MILLISECOND_MAX):
+        raise ValueError("'millisecond' not within supported range")
+
+    if (microsecond is not None
+            and not MICROSECOND_MIN <= microsecond <= MICROSECOND_MAX):
+        raise ValueError("'microsecond' not within supported range")
+
+    if (nanosecond is not None
+            and not NANOSECOND_MIN <= nanosecond <= NANOSECOND_MAX):
+        raise ValueError("'nanosecond' not within supported range")
+
+    #
     # Byte packing
+    #
+
+    d = year << 9 | month << 5 | day
+    t = hour << 12 | minute << 6 | second
+
     if type == 'D':
-        typespec = TYPE_D
-        n = 0b100
-        bits_used = 3
+        # 100DDDDD DDDDDDDD DDDDDDDD
+        return pack_4(0x800000 | d)[-3:]
 
     elif type == 'T':
-        typespec = TYPE_T
-        n = 0b1010000
-        bits_used = 7
+        # 1010000T TTTTTTTT TTTTTTTT
+        return pack_4(0xa00000 | t)[-3:]
 
     elif type == 'DT':
-        typespec = TYPE_DT
-        n = 0b00
-        bits_used = 2
+        # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
+        # TTTTTTTT
+        return pack_8(d << 17 | t)[-5:]
 
     elif type == 'DTS':
-        bits_used = 4  # combined type tag and precision tag
         if nanosecond is not None:
-            n = 0b0110
-            typespec = TYPE_DTS_NS
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
+            # SSSSSSSS
+            return pack_2_8(
+                0b0110 << 4 | d >> 17,
+                (d & 0x1ffff) << 47 | t << 30 | nanosecond)[-9:]
         elif microsecond is not None:
-            n = 0b0101
-            typespec = TYPE_DTS_US
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
+            return pack_8(
+                0b0101 << 60 | d << 39 | t << 22 | microsecond << 2)
         elif millisecond is not None:
-            n = 0b0100
-            typespec = TYPE_DTS_MS
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSS0000
+            return pack_8(
+                0b0100 << 52 | d << 31 | t << 14 | millisecond << 4)[-7:]
         else:
-            n = 0b0111
-            typespec = TYPE_DTS_NONE
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TT000000
+            return pack_8(0b0111 << 44 | d << 23 | t << 6)[-6:]
 
-    else:
-        raise NotImplementedError()
-
-    # Pack the components
-    for name, size, mask, min_value, max_value, empty in typespec:
-        value = kwargs[name]
-
-        if value is None:
-            value = empty
-        elif not min_value <= value <= max_value:
-            raise ValueError(
-                "{0} {1:d} not in range [{2:d}, {3:d}]".format(
-                    name, value, min_value, max_value))
-
-        bits_used += size
-        n <<= size
-        n |= value
-
-    assert bits_used % 8 == 0  # FIXME remove once all types are implemented
-    return to_bytes(n, bits_used // 8)
+    raise NotImplementedError()
 
 
 def unpackb(value):

@@ -34,6 +34,12 @@ def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
 #   (name, size, mask, min_value, max_value, empty)
 #
 
+SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
+
+D_MASK = 0x1fffff
+T_MASK = 0x1ffff
+Z_MASK = 0x7f
+
 YEAR_MIN, YEAR_MAX, YEAR_EMPTY, YEAR_MASK = 0, 4094, 4095, 0xfff
 MONTH_MIN, MONTH_MAX, MONTH_EMPTY, MONTH_MASK = 0, 11, 15, 0xf
 DAY_MIN, DAY_MAX, DAY_EMPTY, DAY_MASK = 0, 30, 31, 0x1f
@@ -43,11 +49,7 @@ SECOND_MIN, SECOND_MAX, SECOND_EMPTY, SECOND_MASK = 0, 60, 63, 0x3f
 MILLISECOND_MIN, MILLISECOND_MAX, MILLISECOND_MASK = 0, 999, 0x3ff
 MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
 NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
-
-SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
-
-D_MASK = 0x1fffff
-T_MASK = 0x1ffff
+TIMEZONE_MIN, TIMEZONE_MAX, TIMEZONE_EMPTY, TIMEZONE_MASK = 0, 126, 127, Z_MASK
 
 
 #
@@ -154,6 +156,16 @@ def packb(
             and not NANOSECOND_MIN <= nanosecond <= NANOSECOND_MAX):
         raise ValueError("'nanosecond' not within supported range")
 
+    if tz_offset is None:
+        tz_offset = TIMEZONE_EMPTY
+    else:
+        z, remainder = divmod(tz_offset, 15)
+        if remainder:
+            raise ValueError("'tz_offset' must be a multiple of 15")
+        z += 64
+        if not TIMEZONE_MIN <= z <= TIMEZONE_MAX:
+            raise ValueError("'tz_offset' not within supported range")
+
     #
     # Byte packing
     #
@@ -173,6 +185,11 @@ def packb(
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
         # TTTTTTTT
         return pack_8(d << 17 | t)[-5:]
+
+    elif type == 'DTZ':
+        # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
+        # TTTTTTTT TZZZZZZZ
+        return pack_8(0b110 << 45 | d << 24 | t << 7 | z)[-6:]
 
     elif type == 'DTS':
         if nanosecond is not None:
@@ -212,7 +229,7 @@ def unpackb(value):
     if PY2:
         first = ord(first)
 
-    d = t = millisecond = microsecond = nanosecond = None
+    d = t = z = millisecond = microsecond = nanosecond = None
 
     if first <= 0b00111111:
         # Type DT, tag 00
@@ -282,8 +299,14 @@ def unpackb(value):
     elif first <= 0b10111111:
         raise ValueError("first byte does not contain a valid tag")
 
-    elif first <= 0b11011111:  # tag 110
-        raise NotImplementedError("DTZ")
+    elif first <= 0b11011111:
+        # Type DTZ, tag 110
+        # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
+        # TTTTTTTT TZZZZZZZ
+        n = unpack_8(value)
+        d = n >> 24 & D_MASK
+        t = n >> 7 & T_MASK
+        z = n & Z_MASK
 
     elif first <= 0b11111111:  # tag 111
         raise NotImplementedError("DTSZ")
@@ -307,6 +330,16 @@ def unpackb(value):
         second = t & SECOND_MASK
 
     #
+    # Normalize time zone offset
+    #
+
+    if z is None:
+        tz_hour = tz_minute = tz_offset = 0
+    else:
+        tz_offset = 15 * (z - 64)
+        tz_hour, tz_minute = divmod(tz_offset, 60)
+
+    #
     # Sub-second fields are either all None, or none are None.
     #
 
@@ -324,5 +357,5 @@ def unpackb(value):
         year, month, day,
         hour, minute, second,
         millisecond, microsecond, nanosecond,
-        None, None, None,  # TODO: timezone
+        tz_hour, tz_minute, tz_offset,
     )

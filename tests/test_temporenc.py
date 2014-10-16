@@ -51,6 +51,30 @@ def test_type_dt():
     assert parsed.second == 12
 
 
+def test_type_dtz():
+
+    # Note: hour is adjusted for UTC
+
+    actual = temporenc.packb(
+        type='DTZ',
+        year=1983, month=1, day=15,
+        hour=17, minute=25, second=12,
+        tz_offset=60)
+    expected = from_hex('cf 7e 0e 8b 26 44')
+    assert actual == expected
+
+    parsed = temporenc.unpackb(expected)
+    assert parsed.year == 1983
+    assert parsed.month == 1
+    assert parsed.day == 15
+    assert parsed.hour == 17
+    assert parsed.minute == 25
+    assert parsed.second == 12
+    assert parsed.tz_hour == 1
+    assert parsed.tz_minute == 0
+    assert parsed.tz_offset == 60
+
+
 def test_type_dts():
 
     actual = temporenc.packb(
@@ -118,3 +142,6 @@ def test_type_detection():
     assert len(temporenc.packb(millisecond=0)) == 7
     assert len(temporenc.packb(microsecond=0)) == 8
     assert len(temporenc.packb(nanosecond=0)) == 9
+
+    # Type DTZ
+    assert len(temporenc.packb(year=1983, hour=18, tz_offset=120)) == 6

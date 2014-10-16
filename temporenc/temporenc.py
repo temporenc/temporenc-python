@@ -8,36 +8,6 @@ PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
 
 #
-# Compatibility helpers
-#
-
-if sys.version_info[:2] <= (2, 6):
-    # struct.unpack() does not handle bytearray() in Python < 2.7
-    def unpack(fmt, value):
-        return struct.unpack(fmt, buffer(value))
-else:
-    unpack = struct.unpack
-
-if PY2:
-    def to_bytes(value, size):
-        if size <= 8:
-            return struct.pack('>Q', value)[-size:]
-
-        if size <= 10:
-            return struct.pack(
-                '>HQ',
-                (value >> 64) & 0xffff,
-                value & 0xffffffffffffffff)[-size:]
-
-        # Temporenc values are always 3-10 bytes.
-        assert False, "value too large"
-
-else:
-    def to_bytes(value, size):
-        return value.to_bytes(size, 'big')
-
-
-#
 # Byte packing helpers
 #
 

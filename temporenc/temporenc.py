@@ -57,7 +57,8 @@ T_MASK = 0x1ffff
 Value = collections.namedtuple('Value', [
     'year', 'month', 'day',
     'hour', 'minute', 'second',
-    'millisecond', 'microsecond', 'nanosecond'])
+    'millisecond', 'microsecond', 'nanosecond',
+    'tz_hour', 'tz_minute', 'tz_offset'])
 
 
 def packb(
@@ -316,4 +317,6 @@ def unpackb(value):
     return Value(
         year, month, day,
         hour, minute, second,
-        millisecond, microsecond, nanosecond)
+        millisecond, microsecond, nanosecond,
+        None, None, None,  # TODO: timezone
+    )

@@ -199,13 +199,12 @@ def unpackb(value):
     # Unpack components
     #
 
+    first = value[0]
     if PY2:
-        # We want the subscription operator [] to return integers.
-        value = bytearray(value)
+        first = ord(first)
 
     d = None
     t = None
-    first = value[0]
 
     if first <= 0b00111111:
         # Type DT, tag 00

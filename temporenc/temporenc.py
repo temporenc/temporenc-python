@@ -218,8 +218,47 @@ def unpackb(value):
         d = n >> 17 & D_MASK
         t = n & T_MASK
 
-    elif first <= 0b01111111:  # tag 01
-        raise NotImplementedError("DTS")
+    elif first <= 0b01111111:
+        # Type DTS, tag 01
+
+        precision = first >> 4 & 0x03
+        expected_length = 6 if precision == 3 else 7 + precision
+        if not len(value) == expected_length:
+            raise ValueError(
+                "DTS value has incorrect length; expected, {0:d}, "
+                "got {1:d}".format(expected_length, len(value)))
+
+        # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+        # TTTTTTTT TT...... (first 6 bytes)
+        n = unpack_8(value[:6]) >> 6
+        d = n >> 23 & D_MASK
+        t = n >> 6 & T_MASK
+
+        # Extract S component from last 4 bytes
+        n = unpack_4(value[-4:])
+        if precision == 0:
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSS0000
+            millisecond = n >> 4 & MILLISECOND_MASK
+            microsecond = millisecond * 1000
+            nanosecond = microsecond * 1000
+        elif precision == 1:
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
+            microsecond = n >> 2 & MICROSECOND_MASK
+            millisecond = microsecond // 1000
+            nanosecond = microsecond * 1000
+        elif precision == 2:
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
+            # SSSSSSSS
+            nanosecond = n & NANOSECOND_MASK
+            microsecond = nanosecond // 1000
+            millisecond = microsecond // 1000
+        elif precision == 3:
+            # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
+            # TTTTTTTT TT000000
+            pass
 
     elif first <= 0b10011111:
         # Type D, tag 100

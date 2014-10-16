@@ -226,6 +226,7 @@ def unpackb(value):
     kwargs = dict.fromkeys(Value._fields)
     for name, size, mask, min_value, max_value, empty in reversed(typespec):
         decoded = n & mask
+        n >>= size
 
         if decoded == empty:
             continue
@@ -236,7 +237,6 @@ def unpackb(value):
                     name, decoded, min_value, max_value))
 
         kwargs[name] = decoded
-        n >>= size
 
     # Both month and day are stored off-by-one.
     if kwargs['month'] is not None:

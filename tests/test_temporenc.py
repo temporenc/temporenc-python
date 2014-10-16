@@ -86,9 +86,11 @@ def test_type_detection():
 
     # Type D
     assert len(temporenc.packb(year=1983)) == 3
+    assert temporenc.unpackb(temporenc.packb(year=1983)).year == 1983
 
     # Type T
     assert len(temporenc.packb(hour=18)) == 3
+    assert temporenc.unpackb(temporenc.packb(hour=18)).hour == 18
 
     # Type DT
     assert len(temporenc.packb(year=1983, hour=18)) == 5

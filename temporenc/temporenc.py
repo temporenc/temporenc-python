@@ -46,6 +46,14 @@ pack_8 = struct.Struct('>Q').pack
 pack_2_8 = struct.Struct('>HQ').pack
 
 
+def unpack_4(value, _unpack=struct.Struct('>L').unpack):
+    return _unpack(value.rjust(4, b'\x00'))[0]
+
+
+def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
+    return _unpack(value.rjust(8, b'\x00'))[0]
+
+
 #
 # Components and types
 #
@@ -66,45 +74,15 @@ MILLISECOND_MIN, MILLISECOND_MAX, MILLISECOND_MASK = 0, 999, 0x3ff
 MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
 NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
 
-COMPONENT_YEAR = ('year', 12, 0xfff, 0, 4094, 4095)
-COMPONENT_MONTH = ('month', 4, 0xf, 0, 11, 15)
-COMPONENT_DAY = ('day', 5, 0x1f, 0, 30, 31)
-COMPONENT_HOUR = ('hour', 5, 0x1f, 0, 23, 31)
-COMPONENT_MINUTE = ('minute', 6, 0x3f, 0, 59, 63)
-COMPONENT_SECOND = ('second', 6, 0x3f, 0, 60, 63)
-COMPONENT_MILLISECOND = ('millisecond', 10, 0x3ff, 0, 999, None)
-COMPONENT_MICROSECOND = ('microsecond', 20, 0xfffff, 0, 999999, None)
-COMPONENT_NANOSECOND = ('nanosecond', 30, 0x3fffffff, 0, 999999999, None)
-COMPONENT_PADDING_2 = ('padding', 2, 0x2, 0, 0, None)
-COMPONENT_PADDING_4 = ('padding', 4, 0x4, 0, 0, None)
-COMPONENT_PADDING_6 = ('padding', 6, 0x6, 0, 0, None)
-
 SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
 
-TYPE_D = (COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY)
-TYPE_T = (COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND)
-TYPE_DT = (
-    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND)
-TYPE_DTZ = ()  # TODO
-TYPE_DTS_MS = (
-    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-    COMPONENT_MILLISECOND, COMPONENT_PADDING_4)
-TYPE_DTS_US = (
-    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-    COMPONENT_MICROSECOND, COMPONENT_PADDING_2)
-TYPE_DTS_NS = (
-    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-    COMPONENT_NANOSECOND)
-TYPE_DTS_NONE = (
-    COMPONENT_YEAR, COMPONENT_MONTH, COMPONENT_DAY,
-    COMPONENT_HOUR, COMPONENT_MINUTE, COMPONENT_SECOND,
-    COMPONENT_PADDING_6)
-TYPE_DTSZ = ()  # TODO,
+D_MASK = 0x1fffff
+T_MASK = 0x1ffff
 
+
+#
+# Public API
+#
 
 Value = collections.namedtuple('Value', [
     'year', 'month', 'day', 'hour', 'minute', 'second'])
@@ -247,28 +225,49 @@ def unpackb(value):
     if not 3 <= len(value) <= 10:
         raise ValueError("value must be between 3 and 10 bytes")
 
-    # Individual bytes should be integers.
+    #
+    # Unpack components
+    #
+
     if PY2:
+        # We want the subscription operator [] to return integers.
         value = bytearray(value)
 
-    # Detect the type and convert the value into a number
+    d = None
+    t = None
     first = value[0]
 
-    if first <= 0b00111111:  # tag 00
-        typespec = TYPE_DT
-        value = value.rjust(8, b'\x00')
-        (n,) = unpack('>Q', value.rjust(8, b'\x00'))
+    if first <= 0b00111111:
+        # Type DT, tag 00
+
+        if not len(value) == 5:
+            raise ValueError(
+                "DT values must be 5 bytes; got {0:d}".format(len(value)))
+
+        n = unpack_8(value)
+        d = n >> 17 & D_MASK
+        t = n & T_MASK
 
     elif first <= 0b01111111:  # tag 01
         raise NotImplementedError("DTS")
 
-    elif first <= 0b10011111:  # tag 100
-        typespec = TYPE_D
-        (n,) = unpack('>L', value.rjust(4, b'\x00'))
+    elif first <= 0b10011111:
+        # Type D, tag 100
 
-    elif first <= 0b10100001:  # tag 1010000
-        typespec = TYPE_T
-        (n,) = unpack('>L', value.rjust(4, b'\x00'))
+        if not len(value) == 3:
+            raise ValueError(
+                "D values must be 3 bytes; got {0:d}".format(len(value)))
+
+        d = unpack_4(value) & D_MASK
+
+    elif first <= 0b10100001:
+        # Type T, tag 1010000
+
+        if not len(value) == 3:
+            raise ValueError(
+                "T values must be 3 bytes; got {0:d}".format(len(value)))
+
+        t = unpack_4(value) & T_MASK
 
     elif first <= 0b10111111:
         raise ValueError("first byte does not contain a valid tag")
@@ -279,26 +278,22 @@ def unpackb(value):
     elif first <= 0b11111111:  # tag 111
         raise NotImplementedError("DTSZ")
 
-    # Iteratively shift off components from the numerical value
-    kwargs = dict.fromkeys(Value._fields)
-    for name, size, mask, min_value, max_value, empty in reversed(typespec):
-        decoded = n & mask
-        n >>= size
+    #
+    # Split components
+    #
 
-        if decoded == empty:
-            continue
+    if d is None:
+        year = month = day = None
+    else:
+        year = d >> 9 & YEAR_MASK
+        month = (d >> 5 & MONTH_MASK) + 1
+        day = (d & DAY_MASK) + 1
 
-        if not min_value <= decoded <= max_value:
-            raise ValueError(
-                "{0} {1:d} not in range [{2:d}, {3:d}]".format(
-                    name, decoded, min_value, max_value))
+    if t is None:
+        hour = minute = second = None
+    else:
+        hour = t >> 12 & HOUR_MASK
+        minute = t >> 6 & MINUTE_MASK
+        second = t & SECOND_MASK
 
-        kwargs[name] = decoded
-
-    # Both month and day are stored off-by-one.
-    if kwargs['month'] is not None:
-        kwargs['month'] += 1
-    if kwargs['day'] is not None:
-        kwargs['day'] += 1
-
-    return Value(**kwargs)
+    return Value(year, month, day, hour, minute, second)

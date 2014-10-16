@@ -84,6 +84,9 @@ def test_type_dts():
 
 def test_type_detection():
 
+    # Empty value, so should result in the smallest type
+    assert len(temporenc.packb()) == 3
+
     # Type D
     assert len(temporenc.packb(year=1983)) == 3
     assert temporenc.unpackb(temporenc.packb(year=1983)).year == 1983

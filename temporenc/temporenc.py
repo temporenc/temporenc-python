@@ -55,7 +55,9 @@ T_MASK = 0x1ffff
 #
 
 Value = collections.namedtuple('Value', [
-    'year', 'month', 'day', 'hour', 'minute', 'second'])
+    'year', 'month', 'day',
+    'hour', 'minute', 'second',
+    'millisecond', 'microsecond', 'nanosecond'])
 
 
 def packb(
@@ -203,8 +205,7 @@ def unpackb(value):
     if PY2:
         first = ord(first)
 
-    d = None
-    t = None
+    d = t = millisecond = microsecond = nanosecond = None
 
     if first <= 0b00111111:
         # Type DT, tag 00
@@ -265,4 +266,7 @@ def unpackb(value):
         minute = t >> 6 & MINUTE_MASK
         second = t & SECOND_MASK
 
-    return Value(year, month, day, hour, minute, second)
+    return Value(
+        year, month, day,
+        hour, minute, second,
+        millisecond, microsecond, nanosecond)

@@ -49,7 +49,6 @@ def test_type_dt():
     assert parsed.hour == 18
     assert parsed.minute == 25
     assert parsed.second == 12
-    # assert parsed.microsecond is None
 
 
 def test_type_dts():

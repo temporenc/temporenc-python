@@ -26,12 +26,6 @@ def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
 #
 # Components and types
 #
-# Composite components like date and time are split to make the
-# implementation simpler. Each component is a tuple with these
-# components:
-#
-#   (name, size, mask, min_value, max_value, empty)
-#
 
 SUPPORTED_TYPES = set(['D', 'T', 'DT', 'DTZ', 'DTS', 'DTSZ'])
 

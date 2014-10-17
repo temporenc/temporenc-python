@@ -194,6 +194,9 @@ def test_type_detection():
     # Type DTZ
     assert len(temporenc.packb(year=1983, hour=18, tz_offset=120)) == 6
 
+    # Type DTSZ
+    assert len(temporenc.packb(millisecond=0, tz_offset=120)) == 8
+
 
 def test_type_empty_values():
     v = temporenc.unpackb(temporenc.packb('DTS'))

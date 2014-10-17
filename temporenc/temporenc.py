@@ -339,6 +339,12 @@ def unpackb(value):
 
     elif first <= 0b11011111:
         # Type DTZ, tag 110
+
+        if not len(value) == DTZ_LENGTH:
+            raise ValueError(
+                "DTZ value must be {0:d} bytes; got {1:d}".format(
+                    DTZ_LENGTH, len(value)))
+
         # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
         # TTTTTTTT TZZZZZZZ
         n = unpack_8(value)

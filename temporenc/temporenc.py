@@ -253,7 +253,7 @@ def unpackb(value):
     elif first <= 0b01111111:
         # Type DTS, tag 01
 
-        precision = first >> 4 & 0x03
+        precision = first >> 4 & 0b11
 
         if not len(value) == DTS_LENGTHS[precision]:
             raise ValueError(
@@ -269,20 +269,20 @@ def unpackb(value):
 
         # Extract S component from last 4 bytes
         n = unpack_4(value[-4:])
-        if precision == 0:
+        if precision == 0b00:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSS0000
             millisecond = n >> 4 & MILLISECOND_MASK
-        elif precision == 1:
+        elif precision == 0b01:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
             microsecond = n >> 2 & MICROSECOND_MASK
-        elif precision == 2:
+        elif precision == 0b10:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
             # SSSSSSSS
             nanosecond = n & NANOSECOND_MASK
-        elif precision == 3:
+        elif precision == 0b11:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TT000000
             pass

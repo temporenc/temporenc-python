@@ -12,14 +12,19 @@ This is a Python library implementing the `temporenc format
 ____
 
 
-Notes:
+Implemented:
 
-* parsing should work for both strings and file-like objects
+* (un)packing support for all *temporenc* types
 
-* packing support for all *temporenc* types
+* parse into a ``temporenc.Value``
 
 * use the most compact serialization format if no explicit type specified
 
-* parse into a ``temporenc.Value`` (``namedtuple`` or simple object); conversion
-  to/from classes from the stdlib's ``datetime`` module with something like a
-  ``.to_native()`` method.
+
+TODO:
+
+* parsing should work for both strings and file-like objects: ``unpackb()`` and
+  ``unpack()`` just like the msgpack API
+
+* conversion to/from classes from the stdlib's ``datetime`` module with
+  something like a ``.to_native()`` method, with sane time zone handling

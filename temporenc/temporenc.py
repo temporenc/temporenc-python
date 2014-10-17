@@ -266,22 +266,24 @@ def packb(
             return pack_8(0b11111 << 51 | d << 30 | t << 13 | z << 6)[-7:]
 
 
-def _detect_type(n):
-    """Detect temporenc type based on the numeric value of the first byte."""
-    if n <= 0b00111111:
-        return 'DT'
-    elif n <= 0b01111111:
-        return 'DTS'
-    elif n <= 0b10011111:
-        return 'D'
-    elif n <= 0b10100001:
-        return 'T'
-    elif n <= 0b10111111:
-        return None
-    elif n <= 0b11011111:
-        return 'DTZ'
-    elif n <= 0b11111111:
-        return 'DTSZ'
+def _detect_type_precision(first):
+    """
+    Detect type and precision from the numerical value of the first byte.
+    """
+    if first <= 0b00111111:
+        return 'DT', None
+    elif first <= 0b01111111:
+        return 'DTS', first >> 4 & 0b11
+    elif first <= 0b10011111:
+        return 'D', None
+    elif first <= 0b10100001:
+        return 'T', None
+    elif first <= 0b10111111:
+        return None, None
+    elif first <= 0b11011111:
+        return 'DTZ', None
+    elif first <= 0b11111111:
+        return 'DTSZ', first >> 3 & 0b11
 
 
 def unpackb(value):
@@ -303,13 +305,13 @@ def unpackb(value):
     if PY2:
         first = ord(first)
 
-    type = _detect_type(first)
-    d = t = z = millisecond = microsecond = nanosecond = None
-
+    type, precision = _detect_type_precision(first)
     if type is None:
         raise ValueError("first byte does not contain a valid tag")
 
-    elif type == 'DT':
+    d = t = z = millisecond = microsecond = nanosecond = None
+
+    if type == 'DT':
         if not len(value) == DT_LENGTH:
             raise ValueError(
                 "DT value must be {0:d} bytes; got {1:d}".format(
@@ -322,7 +324,6 @@ def unpackb(value):
         t = n & T_MASK
 
     elif type == 'DTS':
-        precision = first >> 4 & 0b11
         if not len(value) == DTS_LENGTHS[precision]:
             raise ValueError(
                 "DTS value with precision {0:02b} must be {1:d} bytes; "
@@ -387,7 +388,6 @@ def unpackb(value):
         z = n & Z_MASK
 
     elif type == 'DTSZ':
-        precision = first >> 3 & 0b11
         if not len(value) == DTSZ_LENGTHS[precision]:
             raise ValueError(
                 "DTSZ value with precision {0:02b} must be {1:d} bytes; "

@@ -266,6 +266,24 @@ def packb(
             return pack_8(0b11111 << 51 | d << 30 | t << 13 | z << 6)[-7:]
 
 
+def _detect_type(n):
+    """Detect temporenc type based on the numeric value of the first byte."""
+    if n <= 0b00111111:
+        return 'DT'
+    elif n <= 0b01111111:
+        return 'DTS'
+    elif n <= 0b10011111:
+        return 'D'
+    elif n <= 0b10100001:
+        return 'T'
+    elif n <= 0b10111111:
+        return None
+    elif n <= 0b11011111:
+        return 'DTZ'
+    elif n <= 0b11111111:
+        return 'DTSZ'
+
+
 def unpackb(value):
     """
     Unpack a temporenc value from a byte string.
@@ -285,11 +303,13 @@ def unpackb(value):
     if PY2:
         first = ord(first)
 
+    type = _detect_type(first)
     d = t = z = millisecond = microsecond = nanosecond = None
 
-    if first <= 0b00111111:
-        # Type DT, tag 00
+    if type is None:
+        raise ValueError("first byte does not contain a valid tag")
 
+    elif type == 'DT':
         if not len(value) == DT_LENGTH:
             raise ValueError(
                 "DT value must be {0:d} bytes; got {1:d}".format(
@@ -301,11 +321,8 @@ def unpackb(value):
         d = n >> 17 & D_MASK
         t = n & T_MASK
 
-    elif first <= 0b01111111:
-        # Type DTS, tag 01
-
+    elif type == 'DTS':
         precision = first >> 4 & 0b11
-
         if not len(value) == DTS_LENGTHS[precision]:
             raise ValueError(
                 "DTS value with precision {0:02b} must be {1:d} bytes; "
@@ -338,9 +355,7 @@ def unpackb(value):
             # TTTTTTTT TT000000
             pass
 
-    elif first <= 0b10011111:
-        # Type D, tag 100
-
+    elif type == 'D':
         if not len(value) == D_LENGTH:
             raise ValueError(
                 "D value must be {0:d} bytes; got {1:d}".format(
@@ -349,9 +364,7 @@ def unpackb(value):
         # 100DDDDD DDDDDDDD DDDDDDDD
         d = unpack_4(value) & D_MASK
 
-    elif first <= 0b10100001:
-        # Type T, tag 1010000
-
+    elif type == 'T':
         if not len(value) == T_LENGTH:
             raise ValueError(
                 "T value must be {0:d} bytes; got {1:d}".format(
@@ -360,12 +373,7 @@ def unpackb(value):
         # 1010000T TTTTTTTT TTTTTTTT
         t = unpack_4(value) & T_MASK
 
-    elif first <= 0b10111111:
-        raise ValueError("first byte does not contain a valid tag")
-
-    elif first <= 0b11011111:
-        # Type DTZ, tag 110
-
+    elif type == 'DTZ':
         if not len(value) == DTZ_LENGTH:
             raise ValueError(
                 "DTZ value must be {0:d} bytes; got {1:d}".format(
@@ -378,11 +386,8 @@ def unpackb(value):
         t = n >> 7 & T_MASK
         z = n & Z_MASK
 
-    elif first <= 0b11111111:
-        # Type DTSZ, tag 111
-
+    elif type == 'DTSZ':
         precision = first >> 3 & 0b11
-
         if not len(value) == DTSZ_LENGTHS[precision]:
             raise ValueError(
                 "DTSZ value with precision {0:02b} must be {1:d} bytes; "

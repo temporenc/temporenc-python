@@ -273,6 +273,16 @@ def packb(
 
 
 def unpackb(value):
+    """
+    Unpack a temporenc value from a byte string.
+
+    `ValueError` is raised for non-conforming values.
+
+    :param bytes value: a byte string to parse
+    :return: a parsed temporenc structure
+    :rtype: Value
+    """
+
     if not 3 <= len(value) <= 10:
         raise ValueError("value must be between 3 and 10 bytes")
 

@@ -283,9 +283,6 @@ def unpackb(value):
     :rtype: Value
     """
 
-    if not 3 <= len(value) <= 10:
-        raise ValueError("value must be between 3 and 10 bytes")
-
     #
     # Unpack components
     #

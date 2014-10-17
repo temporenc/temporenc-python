@@ -1,5 +1,4 @@
 
-import collections
 import struct
 import sys
 
@@ -63,11 +62,37 @@ DTSZ_LENGTHS = [8, 9, 10, 7]  # idem
 # Public API
 #
 
-Value = collections.namedtuple('Value', [
-    'year', 'month', 'day',
-    'hour', 'minute', 'second',
-    'millisecond', 'microsecond', 'nanosecond',
-    'tz_hour', 'tz_minute', 'tz_offset'])
+class Value(object):
+    """
+    Container for representing parsed temporenc value.
+
+    Instances of this class represent a parsed temporenc value.
+
+    This class must not be instantiated directly; use one of the
+    unpacking functions like ``unpackb()`` instead. The only reason this
+    class is part of the public API is to enable applications code like
+    ``isinstance(x, temporenc.Value)``.
+    """
+    __slots__ = [
+        'year', 'month', 'day',
+        'hour', 'minute', 'second',
+        'millisecond', 'microsecond', 'nanosecond',
+        'tz_hour', 'tz_minute', 'tz_offset']
+
+    def __init__(self, year, month, day, hour, minute, second, millisecond,
+                 microsecond, nanosecond, tz_hour, tz_minute, tz_offset):
+        self.year = year
+        self.month = month
+        self.day = day
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+        self.millisecond = millisecond
+        self.microsecond = microsecond
+        self.nanosecond = nanosecond
+        self.tz_hour = tz_hour
+        self.tz_minute = tz_minute
+        self.tz_offset = tz_offset
 
 
 def packb(

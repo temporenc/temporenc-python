@@ -264,8 +264,8 @@ def unpackb(value):
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
         # TTTTTTTT TT...... (first 6 bytes)
         n = unpack_8(value[:6]) >> 6
-        d = n >> 23 & D_MASK
-        t = n >> 6 & T_MASK
+        d = n >> 17 & D_MASK
+        t = n & T_MASK
 
         # Extract S component from last 4 bytes
         n = unpack_4(value[-4:])

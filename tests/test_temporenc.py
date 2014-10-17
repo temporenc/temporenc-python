@@ -70,10 +70,12 @@ def test_type_dts():
         hour=18, minute=25, second=12, millisecond=123)
     dts_ms = from_hex('47 bf 07 49 93 07 b0')
     assert actual == dts_ms
-    unpacked = temporenc.unpackb(dts_ms)
-    assert unpacked.millisecond == 123
-    assert unpacked.microsecond == 123000
-    assert unpacked.nanosecond == 123000000
+    v = temporenc.unpackb(dts_ms)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
+    assert v.millisecond == 123
+    assert v.microsecond == 123000
+    assert v.nanosecond == 123000000
 
     actual = temporenc.packb(
         type='DTS',
@@ -81,10 +83,12 @@ def test_type_dts():
         hour=18, minute=25, second=12, microsecond=123456)
     dts_us = from_hex('57 bf 07 49 93 07 89 00')
     assert actual == dts_us
-    unpacked = temporenc.unpackb(dts_us)
-    assert unpacked.millisecond == 123
-    assert unpacked.microsecond == 123456
-    assert unpacked.nanosecond == 123456000
+    v = temporenc.unpackb(dts_us)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
+    assert v.millisecond == 123
+    assert v.microsecond == 123456
+    assert v.nanosecond == 123456000
 
     actual = temporenc.packb(
         type='DTS',
@@ -92,10 +96,12 @@ def test_type_dts():
         hour=18, minute=25, second=12, nanosecond=123456789)
     dts_ns = from_hex('67 bf 07 49 93 07 5b cd 15')
     assert actual == dts_ns
-    unpacked = temporenc.unpackb(dts_ns)
-    assert unpacked.millisecond == 123
-    assert unpacked.microsecond == 123456
-    assert unpacked.nanosecond == 123456789
+    v = temporenc.unpackb(dts_ns)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
+    assert v.millisecond == 123
+    assert v.microsecond == 123456
+    assert v.nanosecond == 123456789
 
     actual = temporenc.packb(
         type='DTS',
@@ -103,10 +109,12 @@ def test_type_dts():
         hour=18, minute=25, second=12)
     dts_none = from_hex('77 bf 07 49 93 00')
     assert actual == dts_none
-    unpacked = temporenc.unpackb(dts_none)
-    assert unpacked.millisecond is None
-    assert unpacked.microsecond is None
-    assert unpacked.nanosecond is None
+    v = temporenc.unpackb(dts_none)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
+    assert v.millisecond is None
+    assert v.microsecond is None
+    assert v.nanosecond is None
 
 
 def test_type_detection():

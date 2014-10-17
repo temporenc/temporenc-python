@@ -334,7 +334,7 @@ def unpackb(value):
     #
 
     if z is None:
-        tz_hour = tz_minute = tz_offset = 0
+        tz_hour = tz_minute = tz_offset = None
     else:
         tz_offset = 15 * (z - 64)
         tz_hour, tz_minute = divmod(tz_offset, 60)

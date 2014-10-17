@@ -330,15 +330,29 @@ def unpackb(value):
         year = month = day = None
     else:
         year = d >> 9 & YEAR_MASK
-        month = (d >> 5 & MONTH_MASK) + 1
-        day = (d & DAY_MASK) + 1
+        if year == YEAR_EMPTY:
+            year = None
+
+        month = d >> 5 & MONTH_MASK
+        month = None if month == MONTH_EMPTY else month + 1
+
+        day = d & DAY_MASK
+        day = None if day == DAY_EMPTY else day + 1
 
     if t is None:
         hour = minute = second = None
     else:
         hour = t >> 12 & HOUR_MASK
+        if hour == HOUR_EMPTY:
+            hour = None
+
         minute = t >> 6 & MINUTE_MASK
+        if minute == MINUTE_EMPTY:
+            minute = None
+
         second = t & SECOND_MASK
+        if second == SECOND_EMPTY:
+            second = None
 
     #
     # Normalize time zone offset

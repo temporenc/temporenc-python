@@ -140,3 +140,11 @@ def test_type_detection():
 
     # Type DTZ
     assert len(temporenc.packb(year=1983, hour=18, tz_offset=120)) == 6
+
+
+def test_type_empty_values():
+    v = temporenc.unpackb(temporenc.packb('DTS'))
+    assert (v.year, v.month, v.day) == (None, None, None)
+    assert (v.hour, v.minute, v.second) == (None, None, None)
+    assert (v.millisecond, v.microsecond, v.nanosecond) == (None, None, None)
+    assert v.tz_offset is None

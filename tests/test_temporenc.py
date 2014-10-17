@@ -201,3 +201,8 @@ def test_type_empty_values():
     assert (v.hour, v.minute, v.second) == (None, None, None)
     assert (v.millisecond, v.microsecond, v.nanosecond) == (None, None, None)
     assert v.tz_offset is None
+
+
+def test_unpack_bytearray():
+    ba = bytearray((0x8f, 0x7e, 0x0e))
+    assert temporenc.unpackb(ba) is not None

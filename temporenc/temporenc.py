@@ -4,6 +4,7 @@ import sys
 
 
 PY2 = sys.version_info[0] == 2
+PY26 = sys.version_info[0:2] == (2, 6)
 PY3 = sys.version_info[0] == 3
 
 #
@@ -292,7 +293,7 @@ def unpackb(value):
 
     `ValueError` is raised for non-conforming values.
 
-    :param bytes value: a byte string to parse
+    :param bytes value: a byte string (or `bytearray`) to parse
     :return: a parsed temporenc structure
     :rtype: Value
     """
@@ -302,10 +303,16 @@ def unpackb(value):
     #
 
     first = value[0]
-    if PY2:
+
+    if PY2 and isinstance(first, bytes):
         first = ord(first)
 
+    if PY26 and isinstance(value, bytearray):
+        # struct.unpack() does not handle bytearray() in Python < 2.7
+        value = bytes(value)
+
     type, precision = _detect_type_precision(first)
+
     if type is None:
         raise ValueError("first byte does not contain a valid tag")
 

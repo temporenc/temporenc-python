@@ -14,23 +14,20 @@ def test_type_d():
     expected = from_hex('8f 7e 0e')
     assert actual == expected
 
-    parsed = temporenc.unpackb(expected)
-    assert parsed.year == 1983
-    assert parsed.month == 1
-    assert parsed.day == 15
-    assert parsed.hour is None
+    v = temporenc.unpackb(expected)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (None, None, None)
 
 
 def test_type_t():
+
     actual = temporenc.packb(type='T', hour=18, minute=25, second=12)
     expected = from_hex('a1 26 4c')
     assert actual == expected
 
-    parsed = temporenc.unpackb(expected)
-    assert parsed.hour == 18
-    assert parsed.minute == 25
-    assert parsed.second == 12
-    assert parsed.year is None
+    v = temporenc.unpackb(expected)
+    assert (v.year, v.month, v.day) == (None, None, None)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
 
 
 def test_type_dt():
@@ -42,13 +39,9 @@ def test_type_dt():
     expected = from_hex('1e fc 1d 26 4c')
     assert actual == expected
 
-    parsed = temporenc.unpackb(expected)
-    assert parsed.year == 1983
-    assert parsed.month == 1
-    assert parsed.day == 15
-    assert parsed.hour == 18
-    assert parsed.minute == 25
-    assert parsed.second == 12
+    v = temporenc.unpackb(expected)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
 
 
 def test_type_dtz():
@@ -63,16 +56,10 @@ def test_type_dtz():
     expected = from_hex('cf 7e 0e 8b 26 44')
     assert actual == expected
 
-    parsed = temporenc.unpackb(expected)
-    assert parsed.year == 1983
-    assert parsed.month == 1
-    assert parsed.day == 15
-    assert parsed.hour == 17
-    assert parsed.minute == 25
-    assert parsed.second == 12
-    assert parsed.tz_hour == 1
-    assert parsed.tz_minute == 0
-    assert parsed.tz_offset == 60
+    v = temporenc.unpackb(expected)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (17, 25, 12)
+    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
 
 
 def test_type_dts():

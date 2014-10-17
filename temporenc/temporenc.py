@@ -51,6 +51,13 @@ MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
 NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
 TIMEZONE_MIN, TIMEZONE_MAX, TIMEZONE_EMPTY, TIMEZONE_MASK = 0, 126, 127, Z_MASK
 
+D_LENGTH = 3
+T_LENGTH = 3
+DT_LENGTH = 5
+DTZ_LENGTH = 6
+DTS_LENGTHS = [7, 8, 9, 6]    # indexed by precision bits
+DTSZ_LENGTHS = [8, 9, 10, 7]  # idem
+
 
 #
 # Public API
@@ -234,9 +241,10 @@ def unpackb(value):
     if first <= 0b00111111:
         # Type DT, tag 00
 
-        if not len(value) == 5:
+        if not len(value) == DT_LENGTH:
             raise ValueError(
-                "DT value must be 5 bytes; got {0:d}".format(len(value)))
+                "DT value must be {0:d} bytes; got {1:d}".format(
+                    DT_LENGTH, len(value)))
 
         n = unpack_8(value)
         d = n >> 17 & D_MASK
@@ -246,11 +254,12 @@ def unpackb(value):
         # Type DTS, tag 01
 
         precision = first >> 4 & 0x03
-        expected_length = 6 if precision == 3 else 7 + precision
-        if not len(value) == expected_length:
+
+        if not len(value) == DTS_LENGTHS[precision]:
             raise ValueError(
-                "DTS value has incorrect length; expected, {0:d}, "
-                "got {1:d}".format(expected_length, len(value)))
+                "DTS value with precision {0:02b} must be {1:d} bytes; "
+                "got {2:d}".format(
+                    precision, DTS_LENGTHS[precision], len(value)))
 
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
         # TTTTTTTT TT...... (first 6 bytes)
@@ -281,18 +290,20 @@ def unpackb(value):
     elif first <= 0b10011111:
         # Type D, tag 100
 
-        if not len(value) == 3:
+        if not len(value) == D_LENGTH:
             raise ValueError(
-                "D value must be 3 bytes; got {0:d}".format(len(value)))
+                "D value must be {0:d} bytes; got {1:d}".format(
+                    D_LENGTH, len(value)))
 
         d = unpack_4(value) & D_MASK
 
     elif first <= 0b10100001:
         # Type T, tag 1010000
 
-        if not len(value) == 3:
+        if not len(value) == T_LENGTH:
             raise ValueError(
-                "T value must be 3 bytes; got {0:d}".format(len(value)))
+                "T value must be {0:d} bytes; got {1:d}".format(
+                    T_LENGTH, len(value)))
 
         t = unpack_4(value) & T_MASK
 

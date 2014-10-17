@@ -269,6 +269,8 @@ def unpackb(value):
                 "DT value must be {0:d} bytes; got {1:d}".format(
                     DT_LENGTH, len(value)))
 
+        # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
+        # TTTTTTTT
         n = unpack_8(value)
         d = n >> 17 & D_MASK
         t = n & T_MASK
@@ -318,6 +320,7 @@ def unpackb(value):
                 "D value must be {0:d} bytes; got {1:d}".format(
                     D_LENGTH, len(value)))
 
+        # 100DDDDD DDDDDDDD DDDDDDDD
         d = unpack_4(value) & D_MASK
 
     elif first <= 0b10100001:
@@ -328,6 +331,7 @@ def unpackb(value):
                 "T value must be {0:d} bytes; got {1:d}".format(
                     T_LENGTH, len(value)))
 
+        # 1010000T TTTTTTTT TTTTTTTT
         t = unpack_4(value) & T_MASK
 
     elif first <= 0b10111111:

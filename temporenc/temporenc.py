@@ -221,7 +221,30 @@ def packb(
             # TTTTTTTT TT000000
             return pack_8(0b0111 << 44 | d << 23 | t << 6)[-6:]
 
-    raise NotImplementedError()
+    elif type == 'DTSZ':
+        if nanosecond is not None:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSS
+            # SSSSSSSS SZZZZZZZ
+            return pack_2_8(
+                0b11110 << 11 | d >> 10,
+                (d & 0x3ff) << 54 | t << 37 | nanosecond << 7 | z)
+        elif microsecond is not None:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSZ
+            # ZZZZZZ00
+            return pack_2_8(
+                0b11101 << 3 | d >> 18,
+                (d & 0x3ffff) << 46 | t << 29 | microsecond << 9 | z << 2)[-9:]
+        elif millisecond is not None:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000
+            return pack_8(
+                0b11100 << 59 | d << 38 | t << 21 | millisecond << 11 | z << 4)
+        else:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTZZZZZ ZZ000000
+            return pack_8(0b11111 << 51 | d << 30 | t << 13 | z << 6)[-7:]
 
 
 def unpackb(value):
@@ -319,8 +342,46 @@ def unpackb(value):
         t = n >> 7 & T_MASK
         z = n & Z_MASK
 
-    elif first <= 0b11111111:  # tag 111
-        raise NotImplementedError("DTSZ")
+    elif first <= 0b11111111:
+        # Type DTSZ, tag 111
+
+        precision = first >> 3 & 0b11
+
+        if not len(value) == DTSZ_LENGTHS[precision]:
+            raise ValueError(
+                "DTSZ value with precision {0:02b} must be {1:d} bytes; "
+                "got {2:d}".format(
+                    precision, DTSZ_LENGTHS[precision], len(value)))
+
+        # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+        # TTTTTTTT TTT..... (first 6 bytes)
+        n = unpack_8(value[:6]) >> 5
+        d = n >> 17 & D_MASK
+        t = n & T_MASK
+
+        # Extract S and Z components from last 5 bytes
+        n = unpack_8(value[-5:])
+        if precision == 0b00:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000
+            millisecond = n >> 11 & MILLISECOND_MASK
+            z = n >> 4 & Z_MASK
+        elif precision == 0b01:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSZ
+            # ZZZZZZ00
+            microsecond = n >> 9 & MICROSECOND_MASK
+            z = n >> 2 & Z_MASK
+        elif precision == 0b10:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSS
+            # SSSSSSSS SZZZZZZZ
+            nanosecond = n >> 7 & NANOSECOND_MASK
+            z = n & Z_MASK
+        elif precision == 0b11:
+            # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
+            # TTTTTTTT TTTZZZZZ ZZ000000
+            z = n >> 6 & Z_MASK
 
     #
     # Split D and T components

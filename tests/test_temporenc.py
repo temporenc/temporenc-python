@@ -117,6 +117,59 @@ def test_type_dts():
     assert v.nanosecond is None
 
 
+def test_type_dtsz():
+
+    # Note: hour is adjusted for UTC
+
+    actual = temporenc.packb(
+        type='DTSZ',
+        year=1983, month=1, day=15,
+        hour=17, minute=25, second=12, millisecond=123,
+        tz_offset=60)
+    dtsz_ms = from_hex('e3 df 83 a2 c9 83 dc 40')
+    assert actual == dtsz_ms
+    v = temporenc.unpackb(dtsz_ms)
+    assert (v.year, v.month, v.day) == (1983, 1, 15)
+    assert (v.hour, v.minute, v.second) == (17, 25, 12)
+    assert v.millisecond == 123
+    assert v.microsecond == 123000
+    assert v.nanosecond == 123000000
+    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+
+    actual = temporenc.packb(
+        type='DTSZ',
+        year=1983, month=1, day=15,
+        hour=17, minute=25, second=12, microsecond=123456,
+        tz_offset=60)
+    dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
+    assert actual == dtsz_us
+    assert temporenc.unpackb(dtsz_us).microsecond == 123456
+    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+
+    actual = temporenc.packb(
+        type='DTSZ',
+        year=1983, month=1, day=15,
+        hour=17, minute=25, second=12, nanosecond=123456789,
+        tz_offset=60)
+    dtsz_ns = from_hex('f3 df 83 a2 c9 83 ad e6 8a c4')
+    assert actual == dtsz_ns
+    assert temporenc.unpackb(dtsz_ns).nanosecond == 123456789
+    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+
+    actual = temporenc.packb(
+        type='DTSZ',
+        year=1983, month=1, day=15,
+        hour=17, minute=25, second=12,
+        tz_offset=60)
+    dtsz_none = from_hex('fb df 83 a2 c9 91 00')
+    assert actual == dtsz_none
+    v = temporenc.unpackb(dtsz_none)
+    assert v.millisecond is None
+    assert v.millisecond is None
+    assert v.millisecond is None
+    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+
+
 def test_type_detection():
 
     # Empty value, so should result in the smallest type

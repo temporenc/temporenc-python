@@ -211,11 +211,17 @@ def test_type_empty_values():
 
 def test_incorrect_sizes():
 
+    # Too long
     with pytest.raises(ValueError):
-        temporenc.unpackb(temporenc.packb(year=1983) + b'foo')  # too long
+        temporenc.unpackb(temporenc.packb(year=1983) + b'foo')
+    with pytest.raises(ValueError):
+        temporenc.unpackb(temporenc.packb(millisecond=0) + b'foo')
 
+    # Too short
     with pytest.raises(ValueError):
-        temporenc.unpackb(temporenc.packb(year=1983)[:-1])  # too short
+        temporenc.unpackb(temporenc.packb(year=1983)[:-1])
+    with pytest.raises(ValueError):
+        temporenc.unpackb(temporenc.packb(millisecond=0)[:-1])
 
 
 def test_unpack_bytearray():
@@ -239,3 +245,49 @@ def test_stream_packing():
     assert temporenc.pack(fp, year=1984) == 3
     assert fp.tell() == 6
     assert len(fp.getvalue()) == 6
+
+
+def test_wrong_type():
+    with pytest.raises(ValueError):
+        temporenc.packb(type="foo", year=1983)
+
+
+def test_out_of_range_values():
+    with pytest.raises(ValueError):
+        temporenc.packb(year=123456)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(month=-12)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(day=1234)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(hour=1234)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(minute=1234)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(second=1234)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(millisecond=1000)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(microsecond=1000000)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(nanosecond=10000000000)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(tz_offset=1050)
+
+    with pytest.raises(ValueError):
+        temporenc.packb(tz_offset=13)  # not a full quarter
+
+
+def test_unpacking_bogus_data():
+    with pytest.raises(ValueError):
+        # First byte can never occur in valid values.
+        temporenc.unpackb(from_hex('bb 12 34'))

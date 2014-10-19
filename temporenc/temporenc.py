@@ -90,6 +90,49 @@ class Value(object):
         self.tz_minute = tz_minute
         self.tz_offset = tz_offset
 
+    def __str__(self):
+        buf = []
+
+        has_date = (self.year is not None
+                    or self.month is not None
+                    or self.day is not None)
+        if has_date:
+            buf.append("{0:04d}-".format(self.year)
+                       if self.year is not None else "????-")
+            buf.append("{0:02d}-".format(self.month)
+                       if self.month is not None else "??-")
+            buf.append("{0:02d}".format(self.day)
+                       if self.day is not None else "??")
+
+        has_time = (self.hour is not None
+                    or self.minute is not None
+                    or self.second is not None)
+        if has_time:
+
+            if has_date:
+                buf.append(" ")  # separator
+
+            buf.append("{0:02d}:".format(self.hour)
+                       if self.hour is not None else "??:")
+            buf.append("{0:02d}:".format(self.minute)
+                       if self.minute is not None else "??:")
+            buf.append("{0:02d}".format(self.second)
+                       if self.second is not None else "??")
+
+        if self.nanosecond is not None:
+            if not has_time:
+                # Weird edge case: empty hour/minute/second, but
+                # sub-second precision is set.
+                buf.append("??:??:??")
+
+            buf.append(".{0:09d}".format(self.nanosecond).rstrip("0"))
+
+        # TODO: also include time zone. This is *not* just +hh:mm (like
+        # in ISO 8601 notation) since the semantics are different
+        # (temporenc stores info in UTC, not in local time)
+
+        return ''.join(buf)
+
 
 def packb(
         value=None, type=None,

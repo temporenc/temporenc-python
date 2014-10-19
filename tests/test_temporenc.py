@@ -323,3 +323,29 @@ def test_native_packing():
         type='T')
     expected = from_hex('a1 26 4c')
     assert actual == expected
+
+
+def test_string_conversion():
+
+    # Date only
+    value = temporenc.unpackb(temporenc.packb(year=1983, month=1, day=15))
+    assert str(value) == "1983-01-15"
+    value = temporenc.unpackb(temporenc.packb(year=1983, day=15))
+    assert str(value) == "1983-??-15"
+
+    # Time only
+    value = temporenc.unpackb(temporenc.packb(hour=1, minute=2, second=3))
+    assert str(value) == "01:02:03"
+    value = temporenc.unpackb(temporenc.packb(
+        hour=1, second=3, microsecond=12340))
+    assert str(value) == "01:??:03.01234"
+
+    # Date and time
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15,
+        hour=18, minute=25))
+    assert str(value) == "1983-01-15 18:25:??"
+
+    # Very contrived example...
+    value = temporenc.unpackb(temporenc.packb(microsecond=1250))
+    assert str(value) == "??:??:??.00125"

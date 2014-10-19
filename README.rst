@@ -23,7 +23,12 @@ Implemented:
 * parsing works for both strings and file-like objects: ``unpackb()`` and
   ``unpack()`` just like the msgpack API
 
+* packing of instances from the stdlib's ``datetime`` module
+
+
 TODO:
 
-* conversion to/from classes from the stdlib's ``datetime`` module with
-  something like a ``.to_native()`` method, with sane time zone handling
+* conversion to classes from the stdlib's ``datetime`` module with something
+  like a ``.to_native()`` method
+
+* time zone handing for native ``datetime`` types

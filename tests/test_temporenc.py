@@ -1,4 +1,5 @@
 import binascii
+import datetime
 import io
 
 import pytest
@@ -291,3 +292,34 @@ def test_unpacking_bogus_data():
     with pytest.raises(ValueError):
         # First byte can never occur in valid values.
         temporenc.unpackb(from_hex('bb 12 34'))
+
+
+def test_native_packing():
+
+    with pytest.raises(ValueError):
+        temporenc.packb(object())
+
+    # datetime.date => D
+    actual = temporenc.packb(datetime.date(1983, 1, 15))
+    expected = from_hex('8f 7e 0e')
+    assert actual == expected
+
+    # datetime.datetime => DTS, unless told otherwise
+    actual = temporenc.packb(datetime.datetime(
+        1983, 1, 15, 18, 25, 12, 123456))
+    expected = from_hex('57 bf 07 49 93 07 89 00')
+    assert actual == expected
+
+    actual = temporenc.packb(
+        datetime.datetime(1983, 1, 15, 18, 25, 12),
+        type='DT')
+    expected = from_hex('1e fc 1d 26 4c')
+    assert actual == expected
+
+    # datetime.time => DTS, unless told otherwise
+    assert len(temporenc.packb(datetime.datetime.now().time())) == 8
+    actual = temporenc.packb(
+        datetime.time(18, 25, 12),
+        type='T')
+    expected = from_hex('a1 26 4c')
+    assert actual == expected

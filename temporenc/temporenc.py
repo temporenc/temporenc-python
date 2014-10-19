@@ -1,4 +1,5 @@
 
+import datetime
 import struct
 import sys
 
@@ -91,7 +92,7 @@ class Value(object):
 
 
 def packb(
-        type=None,
+        value=None, type=None,
         year=None, month=None, day=None,
         hour=None, minute=None, second=None,
         millisecond=None, microsecond=None, nanosecond=None,
@@ -102,6 +103,29 @@ def packb(
     :return: encoded temporenc value
     :rtype: bytes
     """
+
+    #
+    # Native 'datetime' module handling
+    #
+
+    if value is not None:
+        handled = False
+
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            handled = True
+            year = value.year
+            month = value.month
+            day = value.day
+
+        if isinstance(value, (datetime.datetime, datetime.time)):
+            handled = True
+            hour = value.hour
+            minute = value.minute
+            second = value.second
+            microsecond = value.microsecond
+
+        if not handled:
+            raise ValueError("Cannot encode {0!r}".format(value))
 
     #
     # Type detection

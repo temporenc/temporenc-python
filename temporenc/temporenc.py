@@ -9,23 +9,6 @@ PY26 = sys.version_info[0:2] == (2, 6)
 PY3 = sys.version_info[0] == 3
 
 #
-# Byte packing helpers
-#
-
-pack_4 = struct.Struct('>L').pack
-pack_8 = struct.Struct('>Q').pack
-pack_2_8 = struct.Struct('>HQ').pack
-
-
-def unpack_4(value, _unpack=struct.Struct('>L').unpack):
-    return _unpack(value)[0]
-
-
-def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
-    return _unpack(value)[0]
-
-
-#
 # Components and types
 #
 
@@ -52,6 +35,45 @@ DT_LENGTH = 5
 DTZ_LENGTH = 6
 DTS_LENGTHS = [7, 8, 9, 6]    # indexed by precision bits
 DTSZ_LENGTHS = [8, 9, 10, 7]  # idem
+
+
+#
+# Helpers
+#
+
+pack_4 = struct.Struct('>L').pack
+pack_8 = struct.Struct('>Q').pack
+pack_2_8 = struct.Struct('>HQ').pack
+
+
+def unpack_4(value, _unpack=struct.Struct('>L').unpack):
+    return _unpack(value)[0]
+
+
+def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
+    return _unpack(value)[0]
+
+
+def _detect_type_precision(first):
+    """
+    Detect type and precision from the numerical value of the first byte.
+    """
+    if first <= 0b00111111:
+        return 'DT', None, DT_LENGTH
+    elif first <= 0b01111111:
+        precision = first >> 4 & 0b11
+        return 'DTS', precision, DTS_LENGTHS[precision]
+    elif first <= 0b10011111:
+        return 'D', None, D_LENGTH
+    elif first <= 0b10100001:
+        return 'T', None, T_LENGTH
+    elif first <= 0b10111111:
+        return None, None, None
+    elif first <= 0b11011111:
+        return 'DTZ', None, DTZ_LENGTH
+    elif first <= 0b11111111:
+        precision = first >> 3 & 0b11
+        return 'DTSZ', precision, DTSZ_LENGTHS[precision]
 
 
 #
@@ -354,28 +376,6 @@ def pack(fp, *args, **kwargs):
     :rtype: int
     """
     return fp.write(packb(*args, **kwargs))
-
-
-def _detect_type_precision(first):
-    """
-    Detect type and precision from the numerical value of the first byte.
-    """
-    if first <= 0b00111111:
-        return 'DT', None, DT_LENGTH
-    elif first <= 0b01111111:
-        precision = first >> 4 & 0b11
-        return 'DTS', precision, DTS_LENGTHS[precision]
-    elif first <= 0b10011111:
-        return 'D', None, D_LENGTH
-    elif first <= 0b10100001:
-        return 'T', None, T_LENGTH
-    elif first <= 0b10111111:
-        return None, None, None
-    elif first <= 0b11011111:
-        return 'DTZ', None, DTZ_LENGTH
-    elif first <= 0b11111111:
-        precision = first >> 3 & 0b11
-        return 'DTSZ', precision, DTSZ_LENGTHS[precision]
 
 
 def unpackb(value):

@@ -133,6 +133,9 @@ class Value(object):
 
         return ''.join(buf)
 
+    def __repr__(self):
+        return "<temporenc.Value '{0}'>".format(self)
+
 
 def packb(
         value=None, type=None,

@@ -17,11 +17,11 @@ pack_2_8 = struct.Struct('>HQ').pack
 
 
 def unpack_4(value, _unpack=struct.Struct('>L').unpack):
-    return _unpack(value.rjust(4, b'\x00'))[0]
+    return _unpack(value)[0]
 
 
 def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
-    return _unpack(value.rjust(8, b'\x00'))[0]
+    return _unpack(value)[0]
 
 
 #
@@ -355,14 +355,14 @@ def unpackb(value):
     if type == 'DT':
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
         # TTTTTTTT
-        n = unpack_8(value)
+        n = unpack_8(b'\x00\x00\x00' + value)
         d = n >> 17 & D_MASK
         t = n & T_MASK
 
     elif type == 'DTS':
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
         # TTTTTTTT TT...... (first 6 bytes)
-        n = unpack_8(value[:6]) >> 6
+        n = unpack_8(b'\x00\x00' + value[:6]) >> 6
         d = n >> 17 & D_MASK
         t = n & T_MASK
 
@@ -388,16 +388,16 @@ def unpackb(value):
 
     elif type == 'D':
         # 100DDDDD DDDDDDDD DDDDDDDD
-        d = unpack_4(value) & D_MASK
+        d = unpack_4(b'\x00' + value) & D_MASK
 
     elif type == 'T':
         # 1010000T TTTTTTTT TTTTTTTT
-        t = unpack_4(value) & T_MASK
+        t = unpack_4(b'\x00' + value) & T_MASK
 
     elif type == 'DTZ':
         # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
         # TTTTTTTT TZZZZZZZ
-        n = unpack_8(value)
+        n = unpack_8(b'\x00\x00' + value)
         d = n >> 24 & D_MASK
         t = n >> 7 & T_MASK
         z = n & Z_MASK
@@ -405,12 +405,12 @@ def unpackb(value):
     elif type == 'DTSZ':
         # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
         # TTTTTTTT TTT..... (first 6 bytes)
-        n = unpack_8(value[:6]) >> 5
+        n = unpack_8(b'\x00\x00' + value[:6]) >> 5
         d = n >> 17 & D_MASK
         t = n & T_MASK
 
         # Extract S and Z components from last 5 bytes
-        n = unpack_8(value[-5:])
+        n = unpack_8(b'\x00\x00\x00' + value[-5:])
         if precision == 0b00:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000

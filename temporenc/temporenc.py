@@ -272,26 +272,28 @@ def _detect_type_precision(first):
     Detect type and precision from the numerical value of the first byte.
     """
     if first <= 0b00111111:
-        return 'DT', None
+        return 'DT', None, DT_LENGTH
     elif first <= 0b01111111:
-        return 'DTS', first >> 4 & 0b11
+        precision = first >> 4 & 0b11
+        return 'DTS', precision, DTS_LENGTHS[precision]
     elif first <= 0b10011111:
-        return 'D', None
+        return 'D', None, D_LENGTH
     elif first <= 0b10100001:
-        return 'T', None
+        return 'T', None, T_LENGTH
     elif first <= 0b10111111:
-        return None, None
+        return None, None, None
     elif first <= 0b11011111:
-        return 'DTZ', None
+        return 'DTZ', None, DTZ_LENGTH
     elif first <= 0b11111111:
-        return 'DTSZ', first >> 3 & 0b11
+        precision = first >> 3 & 0b11
+        return 'DTSZ', precision, DTSZ_LENGTHS[precision]
 
 
 def unpackb(value):
     """
     Unpack a temporenc value from a byte string.
 
-    `ValueError` is raised for non-conforming values.
+    If no valid value could be read, this raises `ValueError`.
 
     :param bytes value: a byte string (or `bytearray`) to parse
     :return: a parsed temporenc structure
@@ -311,19 +313,25 @@ def unpackb(value):
         # struct.unpack() does not handle bytearray() in Python < 2.7
         value = bytes(value)
 
-    type, precision = _detect_type_precision(first)
+    type, precision, expected_length = _detect_type_precision(first)
 
     if type is None:
         raise ValueError("first byte does not contain a valid tag")
 
+    if len(value) != expected_length:
+        if precision is None:
+            raise ValueError(
+                "{0} value must be {1:d} bytes; got {2:d}".format(
+                    type, expected_length, len(value)))
+        else:
+            raise ValueError(
+                "{0} value with precision {1:02b} must be {2:d} bytes; "
+                "got {3:d}".format(
+                    type, precision, expected_length, len(value)))
+
     d = t = z = millisecond = microsecond = nanosecond = None
 
     if type == 'DT':
-        if not len(value) == DT_LENGTH:
-            raise ValueError(
-                "DT value must be {0:d} bytes; got {1:d}".format(
-                    DT_LENGTH, len(value)))
-
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
         # TTTTTTTT
         n = unpack_8(value)
@@ -331,12 +339,6 @@ def unpackb(value):
         t = n & T_MASK
 
     elif type == 'DTS':
-        if not len(value) == DTS_LENGTHS[precision]:
-            raise ValueError(
-                "DTS value with precision {0:02b} must be {1:d} bytes; "
-                "got {2:d}".format(
-                    precision, DTS_LENGTHS[precision], len(value)))
-
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
         # TTTTTTTT TT...... (first 6 bytes)
         n = unpack_8(value[:6]) >> 6
@@ -364,29 +366,14 @@ def unpackb(value):
             pass
 
     elif type == 'D':
-        if not len(value) == D_LENGTH:
-            raise ValueError(
-                "D value must be {0:d} bytes; got {1:d}".format(
-                    D_LENGTH, len(value)))
-
         # 100DDDDD DDDDDDDD DDDDDDDD
         d = unpack_4(value) & D_MASK
 
     elif type == 'T':
-        if not len(value) == T_LENGTH:
-            raise ValueError(
-                "T value must be {0:d} bytes; got {1:d}".format(
-                    T_LENGTH, len(value)))
-
         # 1010000T TTTTTTTT TTTTTTTT
         t = unpack_4(value) & T_MASK
 
     elif type == 'DTZ':
-        if not len(value) == DTZ_LENGTH:
-            raise ValueError(
-                "DTZ value must be {0:d} bytes; got {1:d}".format(
-                    DTZ_LENGTH, len(value)))
-
         # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
         # TTTTTTTT TZZZZZZZ
         n = unpack_8(value)
@@ -395,12 +382,6 @@ def unpackb(value):
         z = n & Z_MASK
 
     elif type == 'DTSZ':
-        if not len(value) == DTSZ_LENGTHS[precision]:
-            raise ValueError(
-                "DTSZ value with precision {0:02b} must be {1:d} bytes; "
-                "got {2:d}".format(
-                    precision, DTSZ_LENGTHS[precision], len(value)))
-
         # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
         # TTTTTTTT TTT..... (first 6 bytes)
         n = unpack_8(value[:6]) >> 5

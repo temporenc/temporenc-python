@@ -211,10 +211,10 @@ def test_type_empty_values():
 def test_incorrect_sizes():
 
     with pytest.raises(ValueError):
-        temporenc.unpackb(from_hex('8f 7e 0e ff'))  # too long
+        temporenc.unpackb(temporenc.packb(year=1983) + b'foo')  # too long
 
     with pytest.raises(ValueError):
-        temporenc.unpackb(from_hex('8f 7e'))  # too short
+        temporenc.unpackb(temporenc.packb(year=1983)[:-1])  # too short
 
 
 def test_unpack_bytearray():

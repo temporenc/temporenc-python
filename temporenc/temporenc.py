@@ -267,6 +267,27 @@ def packb(
             return pack_8(0b11111 << 51 | d << 30 | t << 13 | z << 6)[-7:]
 
 
+def pack(fp, *args, **kwargs):
+    """
+    Pack date and time information and write it to a file-like object.
+
+    This is a short-hand for writing a packed value directly to
+    a file-like object. There is no additional behaviour. This function
+    only exists for API parity with the ``unpack()`` function.
+
+    Except for the first argument (the file-like object), all arguments
+    (both positional and keyword) are passed on to ``packb()``. See
+    ``packb()`` for more information.
+
+    :param file-like fp: writeable file-like object
+    :param *args: see ``packb()``
+    :param **kwargs: see ``packb()``
+    :return: number of bytes written
+    :rtype: int
+    """
+    return fp.write(packb(*args, **kwargs))
+
+
 def _detect_type_precision(first):
     """
     Detect type and precision from the numerical value of the first byte.

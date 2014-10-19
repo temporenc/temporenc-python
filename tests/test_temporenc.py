@@ -223,7 +223,7 @@ def test_unpack_bytearray():
     assert temporenc.unpackb(ba) is not None
 
 
-def test_stream_unpack():
+def test_stream_unpacking():
     # This stream contains two values and one byte of trailing data
     fp = io.BytesIO(from_hex('8f 7e 0e 8f 7e 0f ff'))
     assert temporenc.unpack(fp).day == 15
@@ -231,3 +231,11 @@ def test_stream_unpack():
     assert temporenc.unpack(fp).day == 16
     assert fp.tell() == 6
     assert fp.read() == b'\xff'
+
+
+def test_stream_packing():
+    fp = io.BytesIO()
+    assert temporenc.pack(fp, year=1983) == 3
+    assert temporenc.pack(fp, year=1984) == 3
+    assert fp.tell() == 6
+    assert len(fp.getvalue()) == 6

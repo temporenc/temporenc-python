@@ -327,10 +327,10 @@ def unpackb(value):
 
     first = value[0]
 
-    if PY2 and isinstance(first, bytes):
+    if PY2 and isinstance(first, bytes):  # pragma: no cover
         first = ord(first)
 
-    if PY26 and isinstance(value, bytearray):
+    if PY26 and isinstance(value, bytearray):  # pragma: no cover
         # struct.unpack() does not handle bytearray() in Python < 2.7
         value = bytes(value)
 

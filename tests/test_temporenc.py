@@ -202,7 +202,7 @@ def test_type_detection():
 
 
 def test_type_empty_values():
-    v = temporenc.unpackb(temporenc.packb('DTS'))
+    v = temporenc.unpackb(temporenc.packb(type='DTS'))
     assert (v.year, v.month, v.day) == (None, None, None)
     assert (v.hour, v.minute, v.second) == (None, None, None)
     assert (v.millisecond, v.microsecond, v.nanosecond) == (None, None, None)

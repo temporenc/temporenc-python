@@ -60,14 +60,12 @@ DTSZ_LENGTHS = [8, 9, 10, 7]  # idem
 
 class Value(object):
     """
-    Container for representing parsed temporenc value.
-
-    Instances of this class represent a parsed temporenc value.
+    Container to represent a parsed temporenc value.
 
     This class must not be instantiated directly; use one of the
     unpacking functions like ``unpackb()`` instead. The only reason this
-    class is part of the public API is to enable applications code like
-    ``isinstance(x, temporenc.Value)``.
+    class is part of the public API is to allow type checking in
+    application code, e.g. ``isinstance(x, temporenc.Value)``.
     """
     __slots__ = [
         'year', 'month', 'day',

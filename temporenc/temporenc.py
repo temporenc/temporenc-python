@@ -474,3 +474,22 @@ def unpackb(value):
         millisecond, microsecond, nanosecond,
         tz_hour, tz_minute, tz_offset,
     )
+
+
+def unpack(fp):
+    """
+    Unpack a temporenc value from a file-like object.
+
+    This function consumes exactly the number of bytes required to
+    unpack a single temporenc value.
+
+    If no valid value could be read, this raises `ValueError`.
+
+    :param file-like fp: readable file-like object
+    :return: a parsed temporenc structure
+    :rtype: Value
+    """
+
+    first = fp.read(1)
+    _, _, size = _detect_type_precision(ord(first))
+    return unpackb(first + fp.read(size - 1))

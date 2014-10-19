@@ -1,4 +1,5 @@
 import binascii
+import io
 
 import pytest
 
@@ -220,3 +221,13 @@ def test_incorrect_sizes():
 def test_unpack_bytearray():
     ba = bytearray((0x8f, 0x7e, 0x0e))
     assert temporenc.unpackb(ba) is not None
+
+
+def test_stream_unpack():
+    # This stream contains two values and one byte of trailing data
+    fp = io.BytesIO(from_hex('8f 7e 0e 8f 7e 0f ff'))
+    assert temporenc.unpack(fp).day == 15
+    assert fp.tell() == 3
+    assert temporenc.unpack(fp).day == 16
+    assert fp.tell() == 6
+    assert fp.read() == b'\xff'

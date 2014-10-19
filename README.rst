@@ -20,11 +20,10 @@ Implemented:
 
 * use the most compact serialization format if no explicit type specified
 
+* parsing works for both strings and file-like objects: ``unpackb()`` and
+  ``unpack()`` just like the msgpack API
 
 TODO:
-
-* parsing should work for both strings and file-like objects: ``unpackb()`` and
-  ``unpack()`` just like the msgpack API
 
 * conversion to/from classes from the stdlib's ``datetime`` module with
   something like a ``.to_native()`` method, with sane time zone handling

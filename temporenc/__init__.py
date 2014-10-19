@@ -7,6 +7,6 @@ Temporenc, a comprehensive binary encoding format for dates and times
 from .temporenc import (  # noqa
     # pack,  # TODO: implement
     packb,
-    # unpack,  # TODO: implement
+    unpack,
     unpackb,
 )

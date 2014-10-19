@@ -1,5 +1,7 @@
 import binascii
 
+import pytest
+
 import temporenc
 
 
@@ -204,6 +206,15 @@ def test_type_empty_values():
     assert (v.hour, v.minute, v.second) == (None, None, None)
     assert (v.millisecond, v.microsecond, v.nanosecond) == (None, None, None)
     assert v.tz_offset is None
+
+
+def test_incorrect_sizes():
+
+    with pytest.raises(ValueError):
+        temporenc.unpackb(from_hex('8f 7e 0e ff'))  # too long
+
+    with pytest.raises(ValueError):
+        temporenc.unpackb(from_hex('8f 7e'))  # too short
 
 
 def test_unpack_bytearray():

@@ -179,16 +179,24 @@ def packb(
 
         if isinstance(value, (datetime.datetime, datetime.date)):
             handled = True
-            year = value.year
-            month = value.month
-            day = value.day
+            if year is None:
+                year = value.year
+            if month is None:
+                month = value.month
+            if day is None:
+                day = value.day
 
         if isinstance(value, (datetime.datetime, datetime.time)):
             handled = True
-            hour = value.hour
-            minute = value.minute
-            second = value.second
-            microsecond = value.microsecond
+            if hour is None:
+                hour = value.hour
+            if minute is None:
+                minute = value.minute
+            if second is None:
+                second = value.second
+            if (millisecond is None and microsecond is None
+                    and nanosecond is None):
+                microsecond = value.microsecond
 
         if not handled:
             raise ValueError("Cannot encode {0!r}".format(value))

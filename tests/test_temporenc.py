@@ -325,6 +325,14 @@ def test_native_packing():
     assert actual == expected
 
 
+def test_native_packing_with_overrides():
+    actual = temporenc.packb(
+        datetime.datetime(1984, 1, 16, 18, 26, 12, 123456),
+        year=1983, day=15, minute=25)
+    expected = from_hex('57 bf 07 49 93 07 89 00')
+    assert actual == expected
+
+
 def test_string_conversion():
 
     # Date only

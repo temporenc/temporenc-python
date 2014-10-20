@@ -162,34 +162,54 @@ class Value(object):
     def __repr__(self):
         return "<temporenc.Value '{0}'>".format(self)
 
-    def date(self):
+    def date(self, strict=True):
         """
         Represent this value as a ``datetime.date`` instance.
-        """
-        # TODO: strict=False arg to provide defaults for missing parts?
-        # (same for .time() and .datetime())
 
-        if not self.has_date:
-            raise ValueError("Value does not contain date information")
+        TODO: docstring
+        """
+        if not strict:
+            return datetime.date(
+                self.year if self.year is not None else 1,
+                self.month if self.month is not None else 1,
+                self.day if self.day is not None else 1)
+
+        if None in (self.year, self.month, self.day):
+            raise ValueError("incomplete date information")
 
         return datetime.date(self.year, self.month, self.day)
 
-    def time(self):
+    def time(self, strict=True):
         """
         Represent this value as a ``datetime.time`` instance.
-        """
-        if not self.has_time:
-            raise ValueError("Value does not contain time information")
 
+        TODO: docstring
+        """
+        # The stdlib's datetime classes always specify microseconds.
         us = self.microsecond if self.microsecond is not None else 0
+
+        if not strict:
+            return datetime.time(
+                self.hour if self.hour is not None else 0,
+                self.minute if self.minute is not None else 0,
+                self.second if self.second is not None else 0,
+                us)
+
+        if None in (self.hour, self.minute, self.second):
+            raise ValueError("incomplete time information")
+
         return datetime.time(self.hour, self.minute, self.second, us)
 
-    def datetime(self):
+    def datetime(self, strict=True):
         """
         Represent this value as a ``datetime.datetime`` instance.
+
+        TODO: docstring
         """
         # FIXME: this indirect construction is a bit slow...
-        return datetime.datetime.combine(self.date(), self.time())
+        return datetime.datetime.combine(
+            self.date(strict=strict),
+            self.time(strict=strict))
 
 
 def packb(

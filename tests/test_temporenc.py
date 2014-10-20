@@ -350,11 +350,15 @@ def test_native_unpacking():
 
     value = temporenc.unpackb(temporenc.packb(year=1234))
     with pytest.raises(ValueError):
-        value.time()
+        value.date()
+    assert value.date(strict=False).year == 1234
+    assert value.datetime(strict=False).year == 1234
 
     value = temporenc.unpackb(temporenc.packb(hour=14))
     with pytest.raises(ValueError):
-        value.date()
+        value.time()
+    assert value.time(strict=False).hour == 14
+    assert value.datetime(strict=False).hour == 14
 
 
 def test_string_conversion():

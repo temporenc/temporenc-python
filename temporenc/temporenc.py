@@ -483,12 +483,28 @@ def unpackb(value):
 
     d = t = z = millisecond = microsecond = nanosecond = None
 
-    if type == 'DT':
+    if type == 'D':
+        # 100DDDDD DDDDDDDD DDDDDDDD
+        d = unpack_4(b'\x00' + value) & D_MASK
+
+    elif type == 'T':
+        # 1010000T TTTTTTTT TTTTTTTT
+        t = unpack_4(b'\x00' + value) & T_MASK
+
+    elif type == 'DT':
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
         # TTTTTTTT
         n = unpack_8(b'\x00\x00\x00' + value)
         d = n >> 17 & D_MASK
         t = n & T_MASK
+
+    elif type == 'DTZ':
+        # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
+        # TTTTTTTT TZZZZZZZ
+        n = unpack_8(b'\x00\x00' + value)
+        d = n >> 24 & D_MASK
+        t = n >> 7 & T_MASK
+        z = n & Z_MASK
 
     elif type == 'DTS':
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
@@ -516,22 +532,6 @@ def unpackb(value):
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TT000000
             pass
-
-    elif type == 'D':
-        # 100DDDDD DDDDDDDD DDDDDDDD
-        d = unpack_4(b'\x00' + value) & D_MASK
-
-    elif type == 'T':
-        # 1010000T TTTTTTTT TTTTTTTT
-        t = unpack_4(b'\x00' + value) & T_MASK
-
-    elif type == 'DTZ':
-        # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
-        # TTTTTTTT TZZZZZZZ
-        n = unpack_8(b'\x00\x00' + value)
-        d = n >> 24 & D_MASK
-        t = n >> 7 & T_MASK
-        z = n & Z_MASK
 
     elif type == 'DTSZ':
         # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT

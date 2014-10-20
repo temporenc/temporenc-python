@@ -355,11 +355,11 @@ def packb(
 
     if type == 'D':
         # 100DDDDD DDDDDDDD DDDDDDDD
-        return pack_4(0x800000 | d)[-3:]
+        return pack_4(0b100 << 21 | d)[-3:]
 
     elif type == 'T':
         # 1010000T TTTTTTTT TTTTTTTT
-        return pack_4(0xa00000 | t)[-3:]
+        return pack_4(0b1010000 << 17 | t)[-3:]
 
     elif type == 'DT':
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT

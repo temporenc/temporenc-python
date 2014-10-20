@@ -54,9 +54,9 @@ def unpack_8(value, _unpack=struct.Struct('>Q').unpack):
     return _unpack(value)[0]
 
 
-def _detect_type_precision(first):
+def _detect_type(first):
     """
-    Detect type and precision from the numerical value of the first byte.
+    Detect type information from the numerical value of the first byte.
     """
     if first <= 0b00111111:
         return 'DT', None, DT_LENGTH
@@ -465,7 +465,7 @@ def unpackb(value):
         # struct.unpack() does not handle bytearray() in Python < 2.7
         value = bytes(value)
 
-    type, precision, expected_length = _detect_type_precision(first)
+    type, precision, expected_length = _detect_type(first)
 
     if type is None:
         raise ValueError("first byte does not contain a valid tag")
@@ -640,5 +640,5 @@ def unpack(fp):
     :rtype: Value
     """
     first = fp.read(1)
-    _, _, size = _detect_type_precision(ord(first))
+    _, _, size = _detect_type(ord(first))
     return unpackb(first + fp.read(size - 1))

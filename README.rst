@@ -25,10 +25,9 @@ Implemented:
 
 * packing of instances from the stdlib's ``datetime`` module
 
+* conversion to classes from the stdlib's ``datetime`` module
+
 
 TODO:
-
-* conversion to classes from the stdlib's ``datetime`` module with something
-  like a ``.to_native()`` method
 
 * time zone handing for native ``datetime`` types

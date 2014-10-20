@@ -333,6 +333,30 @@ def test_native_packing_with_overrides():
     assert actual == expected
 
 
+def test_native_unpacking():
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15))
+    assert value.date() == datetime.date(1983, 1, 15)
+
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15,
+        hour=1, minute=2, second=3, microsecond=456))
+    assert value.datetime() == datetime.datetime(1983, 1, 15, 1, 2, 3, 456)
+
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15,  # will be ignored
+        hour=1, minute=2, second=3, microsecond=456))
+    assert value.time() == datetime.time(1, 2, 3, 456)
+
+    value = temporenc.unpackb(temporenc.packb(year=1234))
+    with pytest.raises(ValueError):
+        value.time()
+
+    value = temporenc.unpackb(temporenc.packb(hour=14))
+    with pytest.raises(ValueError):
+        value.date()
+
+
 def test_string_conversion():
 
     # Date only

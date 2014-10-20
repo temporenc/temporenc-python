@@ -96,7 +96,8 @@ class Value(object):
         'year', 'month', 'day',
         'hour', 'minute', 'second',
         'millisecond', 'microsecond', 'nanosecond',
-        'tz_hour', 'tz_minute', 'tz_offset']
+        'tz_hour', 'tz_minute', 'tz_offset',
+        'has_date', 'has_time']
 
     def __init__(self, year, month, day, hour, minute, second, millisecond,
                  microsecond, nanosecond, tz_hour, tz_minute, tz_offset):
@@ -113,13 +114,15 @@ class Value(object):
         self.tz_minute = tz_minute
         self.tz_offset = tz_offset
 
+        self.has_date = (year is not None or month is not None
+                         or day is not None)
+        self.has_time = (hour is not None or minute is not None
+                         or second is not None)
+
     def __str__(self):
         buf = []
 
-        has_date = (self.year is not None
-                    or self.month is not None
-                    or self.day is not None)
-        if has_date:
+        if self.has_date:
             buf.append("{0:04d}-".format(self.year)
                        if self.year is not None else "????-")
             buf.append("{0:02d}-".format(self.month)
@@ -127,12 +130,9 @@ class Value(object):
             buf.append("{0:02d}".format(self.day)
                        if self.day is not None else "??")
 
-        has_time = (self.hour is not None
-                    or self.minute is not None
-                    or self.second is not None)
-        if has_time:
+        if self.has_time:
 
-            if has_date:
+            if self.has_date:
                 buf.append(" ")  # separator
 
             buf.append("{0:02d}:".format(self.hour)
@@ -143,7 +143,7 @@ class Value(object):
                        if self.second is not None else "??")
 
         if self.nanosecond is not None:
-            if not has_time:
+            if not self.has_time:
                 # Weird edge case: empty hour/minute/second, but
                 # sub-second precision is set.
                 buf.append("??:??:??")
@@ -158,6 +158,35 @@ class Value(object):
 
     def __repr__(self):
         return "<temporenc.Value '{0}'>".format(self)
+
+    def date(self):
+        """
+        Represent this value as a ``datetime.date`` instance.
+        """
+        # TODO: strict=False arg to provide defaults for missing parts?
+        # (same for .time() and .datetime())
+
+        if not self.has_date:
+            raise ValueError("Value does not contain date information")
+
+        return datetime.date(self.year, self.month, self.day)
+
+    def time(self):
+        """
+        Represent this value as a ``datetime.time`` instance.
+        """
+        if not self.has_time:
+            raise ValueError("Value does not contain time information")
+
+        us = self.microsecond if self.microsecond is not None else 0
+        return datetime.time(self.hour, self.minute, self.second, us)
+
+    def datetime(self):
+        """
+        Represent this value as a ``datetime.datetime`` instance.
+        """
+        # FIXME: this indirect construction is a bit slow...
+        return datetime.datetime.combine(self.date(), self.time())
 
 
 def packb(

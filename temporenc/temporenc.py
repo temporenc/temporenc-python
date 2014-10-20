@@ -84,6 +84,9 @@ class Value(object):
     """
     Container to represent a parsed temporenc value.
 
+    Instances of this class should be considered immutable. Do not
+    assign any new attribute values.
+
     This class must not be instantiated directly; use one of the
     unpacking functions like ``unpackb()`` instead. The only reason this
     class is part of the public API is to allow type checking in

@@ -100,7 +100,7 @@ class Value(object):
         'has_date', 'has_time']
 
     def __init__(self, year, month, day, hour, minute, second, millisecond,
-                 microsecond, nanosecond, tz_hour, tz_minute, tz_offset):
+                 microsecond, nanosecond, tz_offset):
         self.year = year
         self.month = month
         self.day = day
@@ -110,9 +110,12 @@ class Value(object):
         self.millisecond = millisecond
         self.microsecond = microsecond
         self.nanosecond = nanosecond
-        self.tz_hour = tz_hour
-        self.tz_minute = tz_minute
         self.tz_offset = tz_offset
+
+        if tz_offset is None:
+            self.tz_hour = self.tz_minute = None
+        else:
+            self.tz_hour, self.tz_minute = divmod(tz_offset, 60)
 
         self.has_date = (year is not None or month is not None
                          or day is not None)
@@ -578,10 +581,9 @@ def unpackb(value):
     #
 
     if z is None:
-        tz_hour = tz_minute = tz_offset = None
+        tz_offset = None
     else:
         tz_offset = 15 * (z - 64)
-        tz_hour, tz_minute = divmod(tz_offset, 60)
 
     #
     # Sub-second fields are either all None, or none are None.
@@ -601,8 +603,7 @@ def unpackb(value):
         year, month, day,
         hour, minute, second,
         millisecond, microsecond, nanosecond,
-        tz_hour, tz_minute, tz_offset,
-    )
+        tz_offset)
 
 
 def unpack(fp):
@@ -618,7 +619,6 @@ def unpack(fp):
     :return: a parsed temporenc structure
     :rtype: Value
     """
-
     first = fp.read(1)
     _, _, size = _detect_type_precision(ord(first))
     return unpackb(first + fp.read(size - 1))

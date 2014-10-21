@@ -4,6 +4,10 @@ import struct
 import sys
 
 
+#
+# Compatibility
+#
+
 PY2 = sys.version_info[0] == 2
 PY26 = sys.version_info[0:2] == (2, 6)
 
@@ -162,6 +166,17 @@ class Value(object):
     def __repr__(self):
         return "<temporenc.Value '{0}'>".format(self)
 
+    def datetime(self, strict=True):
+        """
+        Represent this value as a ``datetime.datetime`` instance.
+
+        TODO: docstring
+        """
+        # FIXME: this indirect construction is a bit slow...
+        return datetime.datetime.combine(
+            self.date(strict=strict),
+            self.time(strict=strict))
+
     def date(self, strict=True):
         """
         Represent this value as a ``datetime.date`` instance.
@@ -199,17 +214,6 @@ class Value(object):
             raise ValueError("incomplete time information")
 
         return datetime.time(self.hour, self.minute, self.second, us)
-
-    def datetime(self, strict=True):
-        """
-        Represent this value as a ``datetime.datetime`` instance.
-
-        TODO: docstring
-        """
-        # FIXME: this indirect construction is a bit slow...
-        return datetime.datetime.combine(
-            self.date(strict=strict),
-            self.time(strict=strict))
 
 
 def packb(

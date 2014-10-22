@@ -1,4 +1,4 @@
-Python library for *temporenc* 
+Python library for *temporenc*
 ==============================
 
 This is a Python library implementing the `temporenc format
@@ -43,8 +43,8 @@ objects.
 .. autofunction:: pack
 .. autofunction:: unpack
 
-Both :py:func:`unpackb` and :py:func:`unpack` return an instance of the `Value`
-class.
+Both :py:func:`unpackb` and :py:func:`unpack` return an instance of the
+:py:class:`Value` class.
 
 .. autoclass:: Value
    :members:

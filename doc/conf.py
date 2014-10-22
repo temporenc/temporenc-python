@@ -1,3 +1,6 @@
+import os
+
+
 #
 # Project settings
 #
@@ -17,7 +20,6 @@ extensions = [
 ]
 
 autodoc_member_order = 'bysource'
-
 
 #
 # Files and paths
@@ -40,3 +42,14 @@ html_domain_indices = False
 html_use_index = False
 html_show_sphinx = False
 html_show_copyright = False
+
+
+#
+# These docs are intended for hosting by readthedocs.org. Override some
+# settings for local use.
+#
+
+if not 'READTHEDOCS' in os.environ:
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]

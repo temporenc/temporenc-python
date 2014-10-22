@@ -92,9 +92,10 @@ class Value(object):
     assign any new attribute values.
 
     This class must not be instantiated directly; use one of the
-    unpacking functions like ``unpackb()`` instead. The only reason this
-    class is part of the public API is to allow type checking in
-    application code, e.g. ``isinstance(x, temporenc.Value)``.
+    unpacking functions like :py:func:`unpackb()` instead. The only
+    reason this class is part of the public API is to allow type
+    checking in application code, e.g. ``isinstance(x,
+    temporenc.Value)``.
     """
     __slots__ = [
         'year', 'month', 'day',
@@ -173,7 +174,7 @@ class Value(object):
         Since the classes in the ``datetime`` module do not support
         missing values, this will fail when one of the required
         components is not set, which is indicated by raising
-        a ``ValueError``.
+        a :py:exc:`ValueError`.
 
         The default is to perform a strict conversion. To ease working
         with partial dates and times, the `strict` argument can be set
@@ -456,15 +457,15 @@ def pack(fp, *args, **kwargs):
 
     This is a short-hand for writing a packed value directly to
     a file-like object. There is no additional behaviour. This function
-    only exists for API parity with the ``unpack()`` function.
+    only exists for API parity with the :py:func:`unpack()` function.
 
     Except for the first argument (the file-like object), all arguments
-    (both positional and keyword) are passed on to ``packb()``. See
-    ``packb()`` for more information.
+    (both positional and keyword) are passed on to :py:func:`packb()`.
+    See :py:func:`packb()` for more information.
 
     :param file-like fp: writeable file-like object
-    :param *args: see ``packb()``
-    :param **kwargs: see ``packb()``
+    :param args: propagated to :py:func:`packb()`
+    :param kwargs: propagated to :py:func:`packb()`
     :return: number of bytes written
     :rtype: int
     """
@@ -475,11 +476,11 @@ def unpackb(value):
     """
     Unpack a temporenc value from a byte string.
 
-    If no valid value could be read, this raises `ValueError`.
+    If no valid value could be read, this raises :py:exc:`ValueError`.
 
     :param bytes value: a byte string (or `bytearray`) to parse
     :return: a parsed temporenc structure
-    :rtype: Value
+    :rtype: :py:class:`Value`
     """
 
     #
@@ -663,7 +664,7 @@ def unpack(fp):
     This function consumes exactly the number of bytes required to
     unpack a single temporenc value.
 
-    If no valid value could be read, this raises `ValueError`.
+    If no valid value could be read, this raises :py:exc:`ValueError`.
 
     :param file-like fp: readable file-like object
     :return: a parsed temporenc structure

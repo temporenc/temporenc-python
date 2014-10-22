@@ -4,6 +4,11 @@ Python library for *temporenc*
 This is a Python library implementing the `temporenc format
 <https://github.com/wbolster/temporenc>`_ for dates and times.
 
+.. warning::
+
+   This is alpha quality software — do not use for now!
+
+
 
 Installation
 ============

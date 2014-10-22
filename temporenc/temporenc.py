@@ -168,9 +168,25 @@ class Value(object):
 
     def datetime(self, strict=True):
         """
-        Represent this value as a ``datetime.datetime`` instance.
+        Convert this value to a ``datetime.datetime`` instance.
 
-        TODO: docstring
+        Since the classes in the ``datetime`` module do not support
+        missing values, this will fail when one of the required
+        components is not set, which is indicated by raising
+        a ``ValueError``.
+
+        The default is to perform a strict conversion. To ease working
+        with partial dates and times, the `strict` argument can be set
+        to `False`. In that case this method will try to convert the
+        value anyway, by substituting a default value for any missing
+        component, e.g. a missing time is set to `00:00:00`. Note that
+        these substituted values are bogus and should not be used for
+        any application logic, but at least this allows applications to
+        use things like ``.strftime()`` on partial dates and times.
+
+        :param bool strict: whether to use strict conversion rules
+        :return: converted value
+        :type: `datetime.datetime`
         """
         # FIXME: this indirect construction is a bit slow...
         return datetime.datetime.combine(
@@ -179,9 +195,14 @@ class Value(object):
 
     def date(self, strict=True):
         """
-        Represent this value as a ``datetime.date`` instance.
+        Convert this value to a ``datetime.date`` instance.
 
-        TODO: docstring
+        See the documentation for the `datetime()` method for more
+        information.
+
+        :param bool strict: whether to use strict conversion rules
+        :return: converted value
+        :type: `datetime.date`
         """
         if not strict:
             return datetime.date(
@@ -196,9 +217,14 @@ class Value(object):
 
     def time(self, strict=True):
         """
-        Represent this value as a ``datetime.time`` instance.
+        Convert this value to a ``datetime.time`` instance.
 
-        TODO: docstring
+        See the documentation for the `datetime()` method for more
+        information.
+
+        :param bool strict: whether to use strict conversion rules
+        :return: converted value
+        :type: `datetime.date`
         """
         # The stdlib's datetime classes always specify microseconds.
         us = self.microsecond if self.microsecond is not None else 0

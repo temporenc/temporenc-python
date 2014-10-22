@@ -88,7 +88,16 @@ class Value(object):
     """
     Container to represent a parsed temporenc value.
 
-    Instances of this class should be considered immutable. Do not
+    Each component is accessible as an instance attribute. Since
+    *temporenc* allows partial date and time information, any attribute
+    can be ``None``.
+
+    The attributes for sub-second precision and the attributes for time
+    zone information form groups that are either completely empty (all
+    values are ``None``) or completely filled (none of the values are
+    ``None``).
+
+    Instances of this class should be considered immutable, so do not
     assign any new attribute values.
 
     This class must not be instantiated directly; use one of the
@@ -102,35 +111,64 @@ class Value(object):
         'hour', 'minute', 'second',
         'millisecond', 'microsecond', 'nanosecond',
         'tz_hour', 'tz_minute', 'tz_offset',
-        'has_date', 'has_time']
+        '_has_date', '_has_time']
 
     def __init__(self, year, month, day, hour, minute, second, millisecond,
                  microsecond, nanosecond, tz_offset):
+
+        #: Year component.
         self.year = year
+
+        #: Month component.
         self.month = month
+
+        #: Day component.
         self.day = day
+
+        #: Hour component.
         self.hour = hour
+
+        #: Minute component.
         self.minute = minute
+
+        #: Second component.
         self.second = second
+
+        #: Millisecond component. If set, :py:attr:`microsecond` and
+        #: :py:attr:`nanosecond` are also set.
         self.millisecond = millisecond
+
+        #: Microsecond component. If set, :py:attr:`millisecond` and
+        #: :py:attr:`nanosecond` are also set.
         self.microsecond = microsecond
+
+        #: Nanosecond component. If set, :py:attr:`millisecond` and
+        #: :py:attr:`microsecond` are also set.
         self.nanosecond = nanosecond
+
+        #: Time zone offset (total minutes). If set, :py:attr:`tz_hour`
+        #: and :py:attr:`tz_minute` are also set.
         self.tz_offset = tz_offset
 
-        if tz_offset is None:
-            self.tz_hour = self.tz_minute = None
-        else:
+        #: Time zone offset (hours part only) If set, :py:attr:`tz_offset`
+        #: and :py:attr:`tz_minute` are also set.
+        self.tz_hour = None
+
+        #: Time zone offset (minutes part only) If set,
+        #: :py:attr:`tz_offset` and :py:attr:`tz_hour` are also set.
+        self.tz_minute = None
+
+        if tz_offset is not None:
             self.tz_hour, self.tz_minute = divmod(tz_offset, 60)
 
-        self.has_date = (year is not None or month is not None
-                         or day is not None)
-        self.has_time = (hour is not None or minute is not None
-                         or second is not None)
+        self._has_date = not (year is None and month is None and day is None)
+        self._has_time = not (hour is None and minute is None
+                              and second is None)
 
     def __str__(self):
         buf = []
 
-        if self.has_date:
+        if self._has_date:
             buf.append("{0:04d}-".format(self.year)
                        if self.year is not None else "????-")
             buf.append("{0:02d}-".format(self.month)
@@ -138,9 +176,9 @@ class Value(object):
             buf.append("{0:02d}".format(self.day)
                        if self.day is not None else "??")
 
-        if self.has_time:
+        if self._has_time:
 
-            if self.has_date:
+            if self._has_date:
                 buf.append(" ")  # separator
 
             buf.append("{0:02d}:".format(self.hour)
@@ -151,7 +189,7 @@ class Value(object):
                        if self.second is not None else "??")
 
         if self.nanosecond is not None:
-            if not self.has_time:
+            if not self._has_time:
                 # Weird edge case: empty hour/minute/second, but
                 # sub-second precision is set.
                 buf.append("??:??:??")

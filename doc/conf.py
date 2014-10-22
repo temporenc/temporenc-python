@@ -16,6 +16,8 @@ extensions = [
     'sphinx.ext.coverage',
 ]
 
+autodoc_member_order = 'bysource'
+
 
 #
 # Files and paths

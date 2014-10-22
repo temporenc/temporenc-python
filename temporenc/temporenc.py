@@ -88,9 +88,13 @@ class Value(object):
     """
     Container to represent a parsed temporenc value.
 
-    Each component is accessible as an instance attribute. Since
-    *temporenc* allows partial date and time information, any attribute
-    can be ``None``.
+    Each component is accessible as an instance attribute: ``year``,
+    ``month``, ``day``, ``hour``, ``minute``, ``second``,
+    ``millisecond``, ``microsecond``, ``nanosecond``, ``tz_hour``,
+    ``tz_minute``, and``tz_offset``.
+
+    Since *temporenc* allows partial date and time information, any
+    attribute can be ``None``.
 
     The attributes for sub-second precision and the attributes for time
     zone information form groups that are either completely empty (all

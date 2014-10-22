@@ -198,8 +198,8 @@ class Value(object):
         """
         Convert this value to a ``datetime.date`` instance.
 
-        See the documentation for the `datetime()` method for more
-        information.
+        See the documentation for the :py:meth:`datetime()` method for
+        more information.
 
         :param bool strict: whether to use strict conversion rules
         :return: converted value
@@ -220,8 +220,8 @@ class Value(object):
         """
         Convert this value to a ``datetime.time`` instance.
 
-        See the documentation for the `datetime()` method for more
-        information.
+        See the documentation for the :py:meth:`datetime()` method for
+        more information.
 
         :param bool strict: whether to use strict conversion rules
         :return: converted value

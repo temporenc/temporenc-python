@@ -91,7 +91,7 @@ class Value(object):
     Each component is accessible as an instance attribute: ``year``,
     ``month``, ``day``, ``hour``, ``minute``, ``second``,
     ``millisecond``, ``microsecond``, ``nanosecond``, ``tz_hour``,
-    ``tz_minute``, and``tz_offset``.
+    ``tz_minute``, and ``tz_offset``.
 
     Since *temporenc* allows partial date and time information, any
     attribute can be ``None``.

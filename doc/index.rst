@@ -67,8 +67,8 @@ the individual components using one of the many attributes::
     >>> print(moment.second)
     None
 
-Since all fields are optional in *temporenc* value, and since no time
-information was in this example, some of the attributes (e.g. `second`) are
+Since all fields are optional in *temporenc* values, and since no time
+information was set in this example, some of the attributes (e.g. `second`) are
 `None`.
 
 Integration with the ``datetime`` module
@@ -137,6 +137,7 @@ number of bytes from the stream::
     >>> fp = io.BytesIO()  # this could be a real file
     >>> fp.write(b'W\xde\x9bJ\xd5\xe5hL')
     >>> fp.write(b'foo')
+    >>> fp.seek(0)
     >>> temporenc.unpack(fp)
     <temporenc.Moment '2014-10-23 18:45:23.612883'>
     >>> fp.tell()

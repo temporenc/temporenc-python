@@ -1,5 +1,7 @@
 import os
 
+import temporenc
+
 
 #
 # Project settings
@@ -7,8 +9,8 @@ import os
 
 project = 'Temporenc'
 copyright = '2014, Wouter Bolsterlee'
-version = '0.1'  # TODO: get from project
-release = version
+version = temporenc.__version__
+release = temporenc.__version__
 
 #
 # Extensions

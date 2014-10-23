@@ -391,3 +391,25 @@ def test_string_conversion():
     # Very contrived example...
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))
     assert str(value) == "??:??:??.00125"
+
+
+def test_hash():
+
+    now = datetime.datetime.now()
+    later = now.replace(microsecond=0) + datetime.timedelta(hours=1)
+    v1 = temporenc.unpackb(temporenc.packb(now))
+    v2 = temporenc.unpackb(temporenc.packb(now))
+    v3 = temporenc.unpackb(temporenc.packb(later))
+
+    print(hash(v1))
+    print(hash(v2))
+    print(hash(v3))
+    assert hash(v1) == hash(v2)
+    assert hash(v1) != hash(v3)
+
+    d = {}
+    d[v1] = 1
+    d[v2] = 2
+    d[v3] = 3
+    assert len(d) == 2
+    assert d[v1] == 2

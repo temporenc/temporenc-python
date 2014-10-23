@@ -442,9 +442,6 @@ def test_hash():
     v2 = temporenc.unpackb(temporenc.packb(now))
     v3 = temporenc.unpackb(temporenc.packb(later))
 
-    print(hash(v1))
-    print(hash(v2))
-    print(hash(v3))
     assert hash(v1) == hash(v2)
     assert hash(v1) != hash(v3)
 

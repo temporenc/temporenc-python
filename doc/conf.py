@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import temporenc
@@ -8,7 +9,11 @@ import temporenc
 #
 
 project = 'Temporenc'
-copyright = '2014, Wouter Bolsterlee'
+now = datetime.datetime.now()
+if now.year > 2014:
+    copyright = '2014-{0}, Wouter Bolsterlee'.format(now.year)
+else:
+    copyright = '2014, Wouter Bolsterlee'
 version = temporenc.__version__
 release = temporenc.__version__
 

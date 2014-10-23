@@ -414,6 +414,18 @@ def test_native_unpacking():
     assert value.datetime(strict=False).hour == 14
 
 
+def test_native_unpacking_leap_second():
+    value = temporenc.unpackb(temporenc.packb(
+        year=2013, month=6, day=30,
+        hour=23, minute=59, second=60))
+
+    with pytest.raises(ValueError):
+        value.datetime()  # second out of range
+
+    dt = value.datetime(strict=False)
+    assert dt == datetime.datetime(2013, 6, 30, 23, 59, 59)
+
+
 def test_string_conversion():
 
     # Date only

@@ -327,11 +327,18 @@ class Moment(object):
         us = self.microsecond if self.microsecond is not None else 0
 
         if not strict:
+            if self.second is None:
+                second = 0
+            elif self.second == 60:
+                # Assumption: this is a leap second
+                second = 59
+            else:
+                second = self.second
+
             return datetime.time(
                 self.hour if self.hour is not None else 0,
                 self.minute if self.minute is not None else 0,
-                self.second if self.second is not None else 0,
-                us)
+                second, us)
 
         if None in (self.hour, self.minute, self.second):
             raise ValueError("incomplete time information")

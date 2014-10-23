@@ -220,7 +220,34 @@ class Value(object):
         return "<temporenc.Value '{0}'>".format(self)
 
     def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
         return self._struct == other._struct
+
+    def __ne__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._struct != other._struct
+
+    def __gt__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._struct > other._struct
+
+    def __ge__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._struct >= other._struct
+
+    def __lt__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._struct < other._struct
+
+    def __le__(self, other):
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return self._struct <= other._struct
 
     def __hash__(self):
         return hash(self._struct)

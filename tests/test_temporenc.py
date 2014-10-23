@@ -1,6 +1,7 @@
 import binascii
 import datetime
 import io
+import operator
 
 import pytest
 
@@ -391,6 +392,36 @@ def test_string_conversion():
     # Very contrived example...
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))
     assert str(value) == "??:??:??.00125"
+
+
+def test_comparison():
+    now = datetime.datetime.now()
+    later = now.replace(microsecond=0) + datetime.timedelta(hours=1)
+    v1 = temporenc.unpackb(temporenc.packb(now))
+    v2 = temporenc.unpackb(temporenc.packb(now))
+    v3 = temporenc.unpackb(temporenc.packb(later))
+
+    # Same
+    assert v1 == v2
+    assert v1 != v3
+    assert v1 >= v2
+    assert v1 >= v2
+    assert not (v1 > v2)
+    assert not (v1 < v2)
+
+    # Different
+    assert v3 > v1
+    assert v1 < v3
+    assert v3 >= v1
+    assert v1 <= v3
+
+    # Comparison to other types: not equal, or fail (unorderable types)
+    bogus = 'junk'
+    assert not (v1 == bogus)
+    assert v1 != bogus
+    for op in (operator.gt, operator.lt, operator.ge, operator.le):
+        with pytest.raises(TypeError):
+            op(v1, bogus)
 
 
 def test_hash():

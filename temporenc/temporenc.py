@@ -22,16 +22,16 @@ D_MASK = 0x1fffff
 T_MASK = 0x1ffff
 Z_MASK = 0x7f
 
-YEAR_MIN, YEAR_MAX, YEAR_EMPTY, YEAR_MASK = 0, 4094, 4095, 0xfff
-MONTH_MIN, MONTH_MAX, MONTH_EMPTY, MONTH_MASK = 0, 11, 15, 0xf
-DAY_MIN, DAY_MAX, DAY_EMPTY, DAY_MASK = 0, 30, 31, 0x1f
-HOUR_MIN, HOUR_MAX, HOUR_EMPTY, HOUR_MASK = 0, 23, 31, 0x1f
-MINUTE_MIN, MINUTE_MAX, MINUTE_EMPTY, MINUTE_MASK = 0, 59, 63, 0x3f
-SECOND_MIN, SECOND_MAX, SECOND_EMPTY, SECOND_MASK = 0, 60, 63, 0x3f
-MILLISECOND_MIN, MILLISECOND_MAX, MILLISECOND_MASK = 0, 999, 0x3ff
-MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
-NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
-TIMEZONE_MIN, TIMEZONE_MAX, TIMEZONE_EMPTY, TIMEZONE_MASK = 0, 126, 127, Z_MASK
+YEAR_MAX, YEAR_EMPTY, YEAR_MASK = 4094, 4095, 0xfff
+MONTH_MAX, MONTH_EMPTY, MONTH_MASK = 11, 15, 0xf
+DAY_MAX, DAY_EMPTY, DAY_MASK = 30, 31, 0x1f
+HOUR_MAX, HOUR_EMPTY, HOUR_MASK = 23, 31, 0x1f
+MINUTE_MAX, MINUTE_EMPTY, MINUTE_MASK = 59, 63, 0x3f
+SECOND_MAX, SECOND_EMPTY, SECOND_MASK = 60, 63, 0x3f
+MILLISECOND_MAX, MILLISECOND_MASK = 999, 0x3ff
+MICROSECOND_MAX, MICROSECOND_MASK = 999999, 0xfffff
+NANOSECOND_MAX, NANOSECOND_MASK = 999999999, 0x3fffffff
+TIMEZONE_MAX, TIMEZONE_EMPTY, TIMEZONE_MASK = 126, 127, Z_MASK
 
 D_LENGTH = 3
 T_LENGTH = 3
@@ -419,48 +419,48 @@ def packb(
 
     if year is None:
         year = YEAR_EMPTY
-    elif not YEAR_MIN <= year <= YEAR_MAX:
+    elif not 0 <= year <= YEAR_MAX:
         raise ValueError("'year' not within supported range")
 
     if month is None:
         month = MONTH_EMPTY
     else:
         month -= 1
-        if not MONTH_MIN <= month <= MONTH_MAX:
+        if not 0 <= month <= MONTH_MAX:
             raise ValueError("'month' not within supported range")
 
     if day is None:
         day = DAY_EMPTY
     else:
         day -= 1
-        if not DAY_MIN <= day <= DAY_MAX:
+        if not 0 <= day <= DAY_MAX:
             raise ValueError("'day' not within supported range")
 
     if hour is None:
         hour = HOUR_EMPTY
-    elif not HOUR_MIN <= hour <= HOUR_MAX:
+    elif not 0 <= hour <= HOUR_MAX:
         raise ValueError("'hour' not within supported range")
 
     if minute is None:
         minute = MINUTE_EMPTY
-    elif not MINUTE_MIN <= minute <= MINUTE_MAX:
+    elif not 0 <= minute <= MINUTE_MAX:
         raise ValueError("'minute' not within supported range")
 
     if second is None:
         second = SECOND_EMPTY
-    elif not SECOND_MIN <= second <= SECOND_MAX:
+    elif not 0 <= second <= SECOND_MAX:
         raise ValueError("'second' not within supported range")
 
     if (millisecond is not None
-            and not MILLISECOND_MIN <= millisecond <= MILLISECOND_MAX):
+            and not 0 <= millisecond <= MILLISECOND_MAX):
         raise ValueError("'millisecond' not within supported range")
 
     if (microsecond is not None
-            and not MICROSECOND_MIN <= microsecond <= MICROSECOND_MAX):
+            and not 0 <= microsecond <= MICROSECOND_MAX):
         raise ValueError("'microsecond' not within supported range")
 
     if (nanosecond is not None
-            and not NANOSECOND_MIN <= nanosecond <= NANOSECOND_MAX):
+            and not 0 <= nanosecond <= NANOSECOND_MAX):
         raise ValueError("'nanosecond' not within supported range")
 
     if tz_offset is None:
@@ -470,7 +470,7 @@ def packb(
         if remainder:
             raise ValueError("'tz_offset' must be a multiple of 15")
         z += 64
-        if not TIMEZONE_MIN <= z <= TIMEZONE_MAX:
+        if not 0 <= z <= TIMEZONE_MAX:
             raise ValueError("'tz_offset' not within supported range")
 
     #

@@ -115,7 +115,7 @@ class Value(object):
         'hour', 'minute', 'second',
         'millisecond', 'microsecond', 'nanosecond',
         'tz_hour', 'tz_minute', 'tz_offset',
-        '_has_date', '_has_time', '_hash']
+        '_has_date', '_has_time', '_struct']
 
     def __init__(self, year, month, day, hour, minute, second, millisecond,
                  microsecond, nanosecond, tz_offset):
@@ -165,10 +165,16 @@ class Value(object):
         if tz_offset is not None:
             self.tz_hour, self.tz_minute = divmod(tz_offset, 60)
 
-        self._hash = None
         self._has_date = not (year is None and month is None and day is None)
         self._has_time = not (hour is None and minute is None
                               and second is None)
+
+        # This 'struct' contain the values that are relevant for
+        # comparison, hashing, and so on. Time zone information is not
+        # used here, since the actual parts must be in UTC in that case.
+        self._struct = (
+            self.year, self.month, self.day,
+            self.hour, self.minute, self.second, self.nanosecond)
 
     def __str__(self):
         buf = []
@@ -214,26 +220,10 @@ class Value(object):
         return "<temporenc.Value '{0}'>".format(self)
 
     def __eq__(self, other):
-        s = (self.year, self.month, self.day, self.hour, self.minute,
-             self.second, self.nanosecond)
-        o = (other.year, other.month, other.day, other.hour, other.minute,
-             other.second, other.nanosecond)
-        return s == o
+        return self._struct == other._struct
 
     def __hash__(self):
-        if self._hash is None:
-            # Time zone is not taken used, since the actual parts must
-            # be in UTC in that case.
-            self._hash = (
-                hash(self.year)
-                ^ hash(self.month)
-                ^ hash(self.day)
-                ^ hash(self.hour)
-                ^ hash(self.minute)
-                ^ hash(self.second)
-                ^ hash(self.nanosecond))
-
-        return self._hash
+        return hash(self._struct)
 
     def datetime(self, strict=True):
         """

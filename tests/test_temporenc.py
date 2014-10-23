@@ -382,6 +382,12 @@ def test_string_conversion():
         hour=18, minute=25))
     assert str(value) == "1983-01-15 18:25:??"
 
+    # If sub-second is set but equal to 0, the string should show it
+    # properly anyway.
+    value = temporenc.unpackb(temporenc.packb(
+        hour=12, minute=34, second=56, microsecond=0))
+    assert str(value) == "12:34:56.0"
+
     # Very contrived example...
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))
     assert str(value) == "??:??:??.00125"

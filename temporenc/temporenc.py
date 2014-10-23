@@ -198,7 +198,10 @@ class Value(object):
                 # sub-second precision is set.
                 buf.append("??:??:??")
 
-            buf.append(".{0:09d}".format(self.nanosecond).rstrip("0"))
+            if self.nanosecond == 0:
+                buf.append('.0')
+            else:
+                buf.append(".{0:09d}".format(self.nanosecond).rstrip("0"))
 
         # TODO: also include time zone. This is *not* just +hh:mm (like
         # in ISO 8601 notation) since the semantics are different

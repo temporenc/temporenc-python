@@ -41,7 +41,7 @@ html_static_path = ['_static']
 html_domain_indices = False
 html_use_index = False
 html_show_sphinx = False
-html_show_copyright = False
+html_show_copyright = True
 
 
 #

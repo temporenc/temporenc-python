@@ -445,6 +445,10 @@ def test_string_conversion():
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))
     assert str(value) == "??:??:??.00125"
 
+    # And a basic one for repr()
+    value = temporenc.unpackb(temporenc.packb(hour=12, minute=34, second=56))
+    assert '12:34:56' in repr(value)
+
 
 def test_comparison():
     now = datetime.datetime.now()

@@ -88,27 +88,27 @@ class Value(object):
     """
     Container to represent a parsed temporenc value.
 
-    Each component is accessible as an instance attribute: ``year``,
-    ``month``, ``day``, ``hour``, ``minute``, ``second``,
+    Each constituent part is accessible as an instance attribute. These
+    are: ``year``, ``month``, ``day``, ``hour``, ``minute``, ``second``,
     ``millisecond``, ``microsecond``, ``nanosecond``, ``tz_hour``,
-    ``tz_minute``, and ``tz_offset``.
+    ``tz_minute``, and ``tz_offset``. Since *temporenc* allows partial
+    date and time information, any attribute can be ``None``.
 
-    Since *temporenc* allows partial date and time information, any
-    attribute can be ``None``.
+    The attributes for sub-second precision form a group that is either
+    completely empty (all attributes are ``None``) or completely filled
+    (no attribute is ``None``). The same applies to the time zone
+    related attributes.
 
-    The attributes for sub-second precision and the attributes for time
-    zone information form groups that are either completely empty (all
-    values are ``None``) or completely filled (none of the values are
-    ``None``).
+    This class is intended to be a read-only immutable data structure;
+    assigning new values to attributes is not supported.
 
-    Instances of this class should be considered immutable, so do not
-    assign any new attribute values.
+    .. note::
 
-    This class must not be instantiated directly; use one of the
-    unpacking functions like :py:func:`unpackb()` instead. The only
-    reason this class is part of the public API is to allow type
-    checking in application code, e.g. ``isinstance(x,
-    temporenc.Value)``.
+       This class must not be instantiated directly; use one of the
+       unpacking functions like :py:func:`unpackb()` instead. The only
+       reason this class is part of the public API is to allow type
+       checking in application code, e.g. ``isinstance(x,
+       temporenc.Value)``.
     """
     __slots__ = [
         'year', 'month', 'day',

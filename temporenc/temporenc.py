@@ -102,6 +102,17 @@ class Value(object):
     This class is intended to be a read-only immutable data structure;
     assigning new values to attributes is not supported.
 
+    Instances are hashable and can be used as dictionary keys or as
+    members of a set. Instances representing the same moment in time
+    have the same hash value. Time zone information is not taken into
+    account for hashing purposes, since time zone aware values must have
+    their constituent parts in UTC.
+
+    Instances of this class can be compared to each other, with earlier
+    dates sorting first. As with hashing, time zone information is not
+    taken into account, since the actual data must be in UTC in those
+    cases.
+
     .. note::
 
        This class must not be instantiated directly; use one of the

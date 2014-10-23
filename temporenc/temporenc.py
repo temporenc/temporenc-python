@@ -420,48 +420,48 @@ def packb(
     if year is None:
         year = YEAR_EMPTY
     elif not 0 <= year <= YEAR_MAX:
-        raise ValueError("'year' not within supported range")
+        raise ValueError("year not within supported range")
 
     if month is None:
         month = MONTH_EMPTY
     else:
         month -= 1
         if not 0 <= month <= MONTH_MAX:
-            raise ValueError("'month' not within supported range")
+            raise ValueError("month not within supported range")
 
     if day is None:
         day = DAY_EMPTY
     else:
         day -= 1
         if not 0 <= day <= DAY_MAX:
-            raise ValueError("'day' not within supported range")
+            raise ValueError("day not within supported range")
 
     if hour is None:
         hour = HOUR_EMPTY
     elif not 0 <= hour <= HOUR_MAX:
-        raise ValueError("'hour' not within supported range")
+        raise ValueError("hour not within supported range")
 
     if minute is None:
         minute = MINUTE_EMPTY
     elif not 0 <= minute <= MINUTE_MAX:
-        raise ValueError("'minute' not within supported range")
+        raise ValueError("minute not within supported range")
 
     if second is None:
         second = SECOND_EMPTY
     elif not 0 <= second <= SECOND_MAX:
-        raise ValueError("'second' not within supported range")
+        raise ValueError("second not within supported range")
 
     if (millisecond is not None
             and not 0 <= millisecond <= MILLISECOND_MAX):
-        raise ValueError("'millisecond' not within supported range")
+        raise ValueError("millisecond not within supported range")
 
     if (microsecond is not None
             and not 0 <= microsecond <= MICROSECOND_MAX):
-        raise ValueError("'microsecond' not within supported range")
+        raise ValueError("microsecond not within supported range")
 
     if (nanosecond is not None
             and not 0 <= nanosecond <= NANOSECOND_MAX):
-        raise ValueError("'nanosecond' not within supported range")
+        raise ValueError("nanosecond not within supported range")
 
     if tz_offset is None:
         tz_offset = TIMEZONE_EMPTY
@@ -471,7 +471,7 @@ def packb(
             raise ValueError("'tz_offset' must be a multiple of 15")
         z += 64
         if not 0 <= z <= TIMEZONE_MAX:
-            raise ValueError("'tz_offset' not within supported range")
+            raise ValueError("tz_offset not within supported range")
 
     #
     # Byte packing

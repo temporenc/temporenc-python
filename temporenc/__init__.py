@@ -9,5 +9,5 @@ from .temporenc import (  # noqa
     packb,
     unpack,
     unpackb,
-    Value,
+    Moment,
 )

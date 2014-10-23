@@ -44,7 +44,7 @@ objects.
 .. autofunction:: unpack
 
 Both :py:func:`unpackb` and :py:func:`unpack` return an instance of the
-:py:class:`Value` class.
+:py:class:`Moment` class.
 
-.. autoclass:: Value
+.. autoclass:: Moment
    :members:

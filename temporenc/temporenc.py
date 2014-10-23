@@ -84,7 +84,7 @@ def _detect_type(first):
 # Public API
 #
 
-class Value(object):
+class Moment(object):
     """
     Container to represent a parsed temporenc value.
 
@@ -119,7 +119,7 @@ class Value(object):
        unpacking functions like :py:func:`unpackb()` instead. The only
        reason this class is part of the public API is to allow type
        checking in application code, e.g. ``isinstance(x,
-       temporenc.Value)``.
+       temporenc.Moment)``.
     """
     __slots__ = [
         'year', 'month', 'day',
@@ -228,7 +228,7 @@ class Value(object):
         return ''.join(buf)
 
     def __repr__(self):
-        return "<temporenc.Value '{0}'>".format(self)
+        return "<temporenc.Moment '{0}'>".format(self)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -576,7 +576,7 @@ def unpackb(value):
 
     :param bytes value: a byte string (or `bytearray`) to parse
     :return: a parsed temporenc structure
-    :rtype: :py:class:`Value`
+    :rtype: :py:class:`Moment`
     """
 
     #
@@ -746,7 +746,7 @@ def unpackb(value):
         microsecond = nanosecond // 1000
         millisecond = microsecond // 1000
 
-    return Value(
+    return Moment(
         year, month, day,
         hour, minute, second,
         millisecond, microsecond, nanosecond,
@@ -764,7 +764,7 @@ def unpack(fp):
 
     :param file-like fp: readable file-like object
     :return: a parsed temporenc structure
-    :rtype: Value
+    :rtype: :py:class:`Moment`
     """
     first = fp.read(1)
     _, _, size = _detect_type(ord(first))

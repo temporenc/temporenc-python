@@ -698,15 +698,23 @@ def unpackb(value):
     if d is None:
         year = month = day = None
     else:
-        year = d >> 9 & YEAR_MASK
+        year = d >> 9 & YEAR_MASK  # always within range
         if year == YEAR_EMPTY:
             year = None
 
         month = d >> 5 & MONTH_MASK
-        month = None if month == MONTH_EMPTY else month + 1
+        if month == MONTH_EMPTY:
+            month = None
+        elif month > MONTH_MAX:
+            raise ValueError("month not within supported range")
+        else:
+            month += 1
 
-        day = d & DAY_MASK
-        day = None if day == DAY_EMPTY else day + 1
+        day = d & DAY_MASK  # always within range
+        if day == DAY_EMPTY:
+            day = None
+        else:
+            day += 1
 
     if t is None:
         hour = minute = second = None
@@ -714,14 +722,20 @@ def unpackb(value):
         hour = t >> 12 & HOUR_MASK
         if hour == HOUR_EMPTY:
             hour = None
+        elif hour > HOUR_MAX:
+            raise ValueError("hour not within supported range")
 
         minute = t >> 6 & MINUTE_MASK
         if minute == MINUTE_EMPTY:
             minute = None
+        elif minute > MINUTE_MAX:
+            raise ValueError("minute not within supported range")
 
         second = t & SECOND_MASK
         if second == SECOND_EMPTY:
             second = None
+        elif second > SECOND_MAX:
+            raise ValueError("second not within supported range")
 
     #
     # Normalize time zone offset
@@ -737,12 +751,18 @@ def unpackb(value):
     #
 
     if millisecond is not None:
+        if millisecond > MILLISECOND_MAX:
+            raise ValueError("millisecond not within supported range")
         microsecond = millisecond * 1000
         nanosecond = microsecond * 1000
     elif microsecond is not None:
+        if microsecond > MICROSECOND_MAX:
+            raise ValueError("microsecond not within supported range")
         millisecond = microsecond // 1000
         nanosecond = microsecond * 1000
     elif nanosecond is not None:
+        if nanosecond > NANOSECOND_MAX:
+            raise ValueError("nanosecond not within supported range")
         microsecond = nanosecond // 1000
         millisecond = microsecond // 1000
 

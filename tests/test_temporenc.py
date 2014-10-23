@@ -298,6 +298,55 @@ def test_unpacking_bogus_data():
         temporenc.unpackb(from_hex('bb 12 34'))
 
 
+def test_range_check_unpacking():
+
+    # Type T with out of range hour
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b10100001, 0b11100000, 0b00000000)))
+    assert 'hour' in str(e.value)
+
+    # Type T with out of range minute
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b10100000, 0b00001111, 0b01000000)))
+    assert 'minute' in str(e.value)
+
+    # Type T with out of range second
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b10100000, 0b00000000, 0b00111110)))
+    assert 'second' in str(e.value)
+
+    # Type D with out of range month
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b10000000, 0b00000001, 0b11000000)))
+    assert 'month' in str(e.value)
+
+    # Type DTS with out of range millisecond
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b01000000, 0b00000000, 0b00000000, 0b00000000,
+            0b00000000, 0b00111111, 0b11110000)))
+    assert 'millisecond' in str(e.value)
+
+    # Type DTS with out of range microsecond
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b01010000, 0b00000000, 0b00000000, 0b00000000,
+            0b00000000, 0b00111111, 0b11111111, 0b11111100)))
+    assert 'microsecond' in str(e.value)
+
+    # Type DTS with out of range nanosecond
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(bytearray((
+            0b01100000, 0b00000000, 0b00000000, 0b00000000,
+            0b00000000, 0b00111111, 0b11111111, 0b11111111,
+            0b11111111)))
+    assert 'nanosecond' in str(e.value)
+
+
 def test_native_packing():
 
     with pytest.raises(ValueError):

@@ -11,9 +11,6 @@ import sys
 PY2 = sys.version_info[0] == 2
 PY26 = sys.version_info[0:2] == (2, 6)
 
-if PY2:
-    range = xrange
-
 
 #
 # Components and types
@@ -25,16 +22,16 @@ D_MASK = 0x1fffff
 T_MASK = 0x1ffff
 Z_MASK = 0x7f
 
-YEAR_RANGE, YEAR_EMPTY, YEAR_MASK = range(4094 + 1), 4095, 0xfff
-MONTH_RANGE, MONTH_EMPTY, MONTH_MASK = range(11 + 1), 15, 0xf
-DAY_RANGE, DAY_EMPTY, DAY_MASK = range(30 + 1), 31, 0x1f
-HOUR_RANGE, HOUR_EMPTY, HOUR_MASK = range(23 + 1), 31, 0x1f
-MINUTE_RANGE, MINUTE_EMPTY, MINUTE_MASK = range(59 + 1), 63, 0x3f
-SECOND_RANGE, SECOND_EMPTY, SECOND_MASK = range(60 + 1), 63, 0x3f
-MILLISECOND_RANGE, MILLISECOND_MASK = range(999 + 1), 0x3ff
-MICROSECOND_RANGE, MICROSECOND_MASK = range(999999 + 1), 0xfffff
-NANOSECOND_RANGE, NANOSECOND_MASK = range(999999999 + 1), 0x3fffffff
-TIMEZONE_RANGE, TIMEZONE_EMPTY, TIMEZONE_MASK = range(126 + 1), 127, Z_MASK
+YEAR_MIN, YEAR_MAX, YEAR_EMPTY, YEAR_MASK = 0, 4094, 4095, 0xfff
+MONTH_MIN, MONTH_MAX, MONTH_EMPTY, MONTH_MASK = 0, 11, 15, 0xf
+DAY_MIN, DAY_MAX, DAY_EMPTY, DAY_MASK = 0, 30, 31, 0x1f
+HOUR_MIN, HOUR_MAX, HOUR_EMPTY, HOUR_MASK = 0, 23, 31, 0x1f
+MINUTE_MIN, MINUTE_MAX, MINUTE_EMPTY, MINUTE_MASK = 0, 59, 63, 0x3f
+SECOND_MIN, SECOND_MAX, SECOND_EMPTY, SECOND_MASK = 0, 60, 63, 0x3f
+MILLISECOND_MIN, MILLISECOND_MAX, MILLISECOND_MASK = 0, 999, 0x3ff
+MICROSECOND_MIN, MICROSECOND_MAX, MICROSECOND_MASK = 0, 999999, 0xfffff
+NANOSECOND_MIN, NANOSECOND_MAX, NANOSECOND_MASK = 0, 999999999, 0x3fffffff
+TIMEZONE_MIN, TIMEZONE_MAX, TIMEZONE_EMPTY, TIMEZONE_MASK = 0, 126, 127, Z_MASK
 
 D_LENGTH = 3
 T_LENGTH = 3
@@ -422,45 +419,48 @@ def packb(
 
     if year is None:
         year = YEAR_EMPTY
-    elif year not in YEAR_RANGE:
+    elif not YEAR_MIN <= year <= YEAR_MAX:
         raise ValueError("'year' not within supported range")
 
     if month is None:
         month = MONTH_EMPTY
     else:
         month -= 1
-        if month not in MONTH_RANGE:
+        if not MONTH_MIN <= month <= MONTH_MAX:
             raise ValueError("'month' not within supported range")
 
     if day is None:
         day = DAY_EMPTY
     else:
         day -= 1
-        if day not in DAY_RANGE:
+        if not DAY_MIN <= day <= DAY_MAX:
             raise ValueError("'day' not within supported range")
 
     if hour is None:
         hour = HOUR_EMPTY
-    elif hour not in HOUR_RANGE:
+    elif not HOUR_MIN <= hour <= HOUR_MAX:
         raise ValueError("'hour' not within supported range")
 
     if minute is None:
         minute = MINUTE_EMPTY
-    elif minute not in MINUTE_RANGE:
+    elif not MINUTE_MIN <= minute <= MINUTE_MAX:
         raise ValueError("'minute' not within supported range")
 
     if second is None:
         second = SECOND_EMPTY
-    elif second not in SECOND_RANGE:
+    elif not SECOND_MIN <= second <= SECOND_MAX:
         raise ValueError("'second' not within supported range")
 
-    if millisecond is not None and millisecond not in MILLISECOND_RANGE:
+    if (millisecond is not None
+            and not MILLISECOND_MIN <= millisecond <= MILLISECOND_MAX):
         raise ValueError("'millisecond' not within supported range")
 
-    if microsecond is not None and microsecond not in MICROSECOND_RANGE:
+    if (microsecond is not None
+            and not MICROSECOND_MIN <= microsecond <= MICROSECOND_MAX):
         raise ValueError("'microsecond' not within supported range")
 
-    if nanosecond is not None and nanosecond not in NANOSECOND_RANGE:
+    if (nanosecond is not None
+            and not NANOSECOND_MIN <= nanosecond <= NANOSECOND_MAX):
         raise ValueError("'nanosecond' not within supported range")
 
     if tz_offset is None:
@@ -470,7 +470,7 @@ def packb(
         if remainder:
             raise ValueError("'tz_offset' must be a multiple of 15")
         z += 64
-        if z not in TIMEZONE_RANGE:
+        if not TIMEZONE_MIN <= z <= TIMEZONE_MAX:
             raise ValueError("'tz_offset' not within supported range")
 
     #

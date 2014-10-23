@@ -2,10 +2,13 @@ import binascii
 import datetime
 import io
 import operator
+import sys
 
 import pytest
 
 import temporenc
+
+PY2 = sys.version_info[0] == 2
 
 
 def from_hex(s):
@@ -415,13 +418,20 @@ def test_comparison():
     assert v3 >= v1
     assert v1 <= v3
 
-    # Comparison to other types: not equal, or fail (unorderable types)
+    # Equality tests against other types: not equal
     bogus = 'junk'
     assert not (v1 == bogus)
     assert v1 != bogus
+
+    # Comparison against other types:
+    # * fail on Python 3 (unorderable types)
+    # * use fallback comparison on Python 2.
     for op in (operator.gt, operator.lt, operator.ge, operator.le):
-        with pytest.raises(TypeError):
-            op(v1, bogus)
+        if PY2:
+            op(v1, bogus)  # should not raise
+        else:
+            with pytest.raises(TypeError):
+                op(v1, bogus)  # should raise
 
 
 def test_hash():

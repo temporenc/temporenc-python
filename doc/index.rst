@@ -71,8 +71,8 @@ Since all fields are optional in *temporenc* value, and since no time
 information was in this example, some of the attributes (e.g. `second`) are
 `None`.
 
-Integration with the ``datetime`` standard library
---------------------------------------------------
+Integration with the ``datetime`` module
+----------------------------------------
 
 Python has built-in support for date and time handling (the ``datetime``
 module), which is how applications usually work with date and time information.

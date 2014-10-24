@@ -773,37 +773,37 @@ def unpackb(value):
                 "got {3:d}".format(
                     type, precision, expected_length, len(value)))
 
-    d = t = z = nanosecond = None
+    date = time = tz_offset = nanosecond = None
 
     if type == 'D':
         # 100DDDDD DDDDDDDD DDDDDDDD
-        d = unpack_4(b'\x00' + value) & D_MASK
+        date = unpack_4(b'\x00' + value) & D_MASK
 
     elif type == 'T':
         # 1010000T TTTTTTTT TTTTTTTT
-        t = unpack_4(b'\x00' + value) & T_MASK
+        time = unpack_4(b'\x00' + value) & T_MASK
 
     elif type == 'DT':
         # 00DDDDDD DDDDDDDD DDDDDDDT TTTTTTTT
         # TTTTTTTT
         n = unpack_8(b'\x00\x00\x00' + value)
-        d = n >> 17 & D_MASK
-        t = n & T_MASK
+        date = n >> 17 & D_MASK
+        time = n & T_MASK
 
     elif type == 'DTZ':
         # 110DDDDD DDDDDDDD DDDDDDDD TTTTTTTT
         # TTTTTTTT TZZZZZZZ
         n = unpack_8(b'\x00\x00' + value)
-        d = n >> 24 & D_MASK
-        t = n >> 7 & T_MASK
-        z = n & Z_MASK
+        date = n >> 24 & D_MASK
+        time = n >> 7 & T_MASK
+        tz_offset = n & Z_MASK
 
     elif type == 'DTS':
         # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
         # TTTTTTTT TT...... (first 6 bytes)
         n = unpack_8(b'\x00\x00' + value[:6]) >> 6
-        d = n >> 17 & D_MASK
-        t = n & T_MASK
+        date = n >> 17 & D_MASK
+        time = n & T_MASK
 
         # Extract S component from last 4 bytes
         n = unpack_4(value[-4:])
@@ -829,8 +829,8 @@ def unpackb(value):
         # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
         # TTTTTTTT TTT..... (first 6 bytes)
         n = unpack_8(b'\x00\x00' + value[:6]) >> 5
-        d = n >> 17 & D_MASK
-        t = n & T_MASK
+        date = n >> 17 & D_MASK
+        time = n & T_MASK
 
         # Extract S and Z components from last 5 bytes
         n = unpack_8(b'\x00\x00\x00' + value[-5:])
@@ -838,36 +838,36 @@ def unpackb(value):
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000
             nanosecond = (n >> 11 & MILLISECOND_MASK) * 1000000
-            z = n >> 4 & Z_MASK
+            tz_offset = n >> 4 & Z_MASK
         elif precision == 0b01:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSZ
             # ZZZZZZ00
             nanosecond = (n >> 9 & MICROSECOND_MASK) * 1000
-            z = n >> 2 & Z_MASK
+            tz_offset = n >> 2 & Z_MASK
         elif precision == 0b10:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSS
             # SSSSSSSS SZZZZZZZ
             nanosecond = n >> 7 & NANOSECOND_MASK
-            z = n & Z_MASK
+            tz_offset = n & Z_MASK
         elif precision == 0b11:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTZZZZZ ZZ000000
-            z = n >> 6 & Z_MASK
+            tz_offset = n >> 6 & Z_MASK
 
     #
     # Split D and T components
     #
 
-    if d is None:
+    if date is None:
         year = month = day = None
     else:
-        year = d >> 9 & YEAR_MASK  # always within range
+        year = date >> 9 & YEAR_MASK  # always within range
         if year == YEAR_EMPTY:
             year = None
 
-        month = d >> 5 & MONTH_MASK
+        month = date >> 5 & MONTH_MASK
         if month == MONTH_EMPTY:
             month = None
         elif month > MONTH_MAX:
@@ -875,28 +875,28 @@ def unpackb(value):
         else:
             month += 1
 
-        day = d & DAY_MASK  # always within range
+        day = date & DAY_MASK  # always within range
         if day == DAY_EMPTY:
             day = None
         else:
             day += 1
 
-    if t is None:
+    if time is None:
         hour = minute = second = None
     else:
-        hour = t >> 12 & HOUR_MASK
+        hour = time >> 12 & HOUR_MASK
         if hour == HOUR_EMPTY:
             hour = None
         elif hour > HOUR_MAX:
             raise ValueError("hour not within supported range")
 
-        minute = t >> 6 & MINUTE_MASK
+        minute = time >> 6 & MINUTE_MASK
         if minute == MINUTE_EMPTY:
             minute = None
         elif minute > MINUTE_MAX:
             raise ValueError("minute not within supported range")
 
-        second = t & SECOND_MASK
+        second = time & SECOND_MASK
         if second == SECOND_EMPTY:
             second = None
         elif second > SECOND_MAX:
@@ -906,10 +906,8 @@ def unpackb(value):
     # Normalize time zone offset
     #
 
-    if z is None:
-        tz_offset = None
-    else:
-        tz_offset = 15 * (z - 64)
+    if tz_offset is not None:
+        tz_offset = 15 * (tz_offset - 64)
 
     #
     # Sub-second fields are either all None, or none are None.

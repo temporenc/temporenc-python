@@ -178,3 +178,16 @@ Both :py:func:`unpackb` and :py:func:`unpack` return an instance of the
 
 .. autoclass:: Moment
    :members:
+
+____
+
+
+Contributing
+============
+
+Source code, including the test suite, is maintained at Github:
+
+  `temporenc-python on github <https://github.com/wbolster/temporenc-python>`_
+
+Feel free to submit feedback, report issues, bring up improvement ideas, and
+contribute fixes!

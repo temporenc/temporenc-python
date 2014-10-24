@@ -1,5 +1,6 @@
+******************************
 Python library for *temporenc*
-==============================
+******************************
 
 This is a Python library implementing the `temporenc format
 <https://github.com/wbolster/temporenc>`_ for dates and times.
@@ -8,6 +9,11 @@ This is a Python library implementing the `temporenc format
 
    This is alpha quality software — do not use for now!
 
+
+.. contents:: Contents
+   :local:
+
+____
 
 
 Installation
@@ -19,6 +25,8 @@ Use ``pip`` to install the library (e.g. into a ``virtualenv``):
 .. code-block:: shell-session
 
     $ pip install temporenc
+
+____
 
 
 Usage
@@ -147,6 +155,8 @@ number of bytes from the stream::
 
 For writing directly to a file-like object, the :py:func:`pack` function can be
 used, though this is just a shortcut.
+
+____
 
 
 API

@@ -355,6 +355,55 @@ def packb(
     """
     Pack date and time information into a byte string.
 
+    If specified, `value` must be a ``datetime.datetime``,
+    ``datetime.date``, or ``datetime.time`` instance.
+
+    The `type` specifies the *temporenc* type to use. Valid types are
+    `D`, `T`, `DT`, `DTZ`, `DTS`, or `DTSZ`. If not specified, the most
+    compact encoding that can represent the provided information will be
+    determined automatically. Note that instances of the classes in the
+    ``datetime`` module always uses microsecond precision, so make sure
+    to specify a more compact type if no sub-second precision is
+    required.
+
+    Most applications would only use the `value` and `type` arguments;
+    the other arguments allow for encoding data that does not fit the
+    conceptual date and time model used by the standard library's
+    ``datetime`` module.
+
+    .. note::
+
+       Applications that require lexicographical ordering of encoded
+       values should always explicitly specify a type to use.
+
+    All other arguments can be used to specify individual pieces of
+    information that make up a date or time. If both `value` and more
+    specific fields are provided, the individual fields override the
+    values extracted from `value`, e.g. ``packb(datetime.datetime.now(),
+    minute=0, second=0)`` encodes the start of the current hour.
+
+    The sub-second precision arguments (`millisecond`, `microsecond`,
+    and `nanosecond`) must not be used together, since those are
+    conceptually mutually exclusive.
+
+    .. note:
+
+       The `value` argument is the only positional argument. All other
+       arguments *must* be specified as keyword arguments (even though
+       this is not enforced because of Python 2 compatibility).
+
+    :param value: instance of one of the ``datetime`` classes (optional)
+    :param str type: *temporenc* type (optional)
+    :param int year: year (optional)
+    :param int month: month (optional)
+    :param int day: day (optional)
+    :param int hour: hour (optional)
+    :param int minute: minute (optional)
+    :param int second: second (optional)
+    :param int millisecond: millisecond (optional)
+    :param int microsecond: microsecond (optional)
+    :param int nanosecond: nanosecond (optional)
+    :param int tz_offset: time zone offset in minutes from UTC (optional)
     :return: encoded temporenc value
     :rtype: bytes
     """

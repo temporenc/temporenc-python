@@ -128,8 +128,11 @@ class Moment(object):
         'tz_hour', 'tz_minute', 'tz_offset',
         '_has_date', '_has_time', '_struct']
 
-    def __init__(self, year, month, day, hour, minute, second, millisecond,
-                 microsecond, nanosecond, tz_offset):
+    def __init__(
+            self,
+            year, month, day,
+            hour, minute, second, nanosecond,
+            tz_offset):
 
         #: Year component.
         self.year = year
@@ -149,17 +152,20 @@ class Moment(object):
         #: Second component.
         self.second = second
 
-        #: Millisecond component. If set, :py:attr:`microsecond` and
-        #: :py:attr:`nanosecond` are also set.
-        self.millisecond = millisecond
+        if nanosecond is None:
+            self.millisecond = self.microsecond = self.nanosecond = None
+        else:
+            #: Millisecond component. If set, :py:attr:`microsecond` and
+            #: :py:attr:`nanosecond` are also set.
+            self.millisecond = nanosecond // 1000000
 
-        #: Microsecond component. If set, :py:attr:`millisecond` and
-        #: :py:attr:`nanosecond` are also set.
-        self.microsecond = microsecond
+            #: Microsecond component. If set, :py:attr:`millisecond` and
+            #: :py:attr:`nanosecond` are also set.
+            self.microsecond = nanosecond // 1000
 
-        #: Nanosecond component. If set, :py:attr:`millisecond` and
-        #: :py:attr:`microsecond` are also set.
-        self.nanosecond = nanosecond
+            #: Nanosecond component. If set, :py:attr:`millisecond` and
+            #: :py:attr:`microsecond` are also set.
+            self.nanosecond = nanosecond
 
         #: Time zone offset (total minutes). If set, :py:attr:`tz_hour`
         #: and :py:attr:`tz_minute` are also set.
@@ -664,7 +670,7 @@ def unpackb(value):
                 "got {3:d}".format(
                     type, precision, expected_length, len(value)))
 
-    d = t = z = millisecond = microsecond = nanosecond = None
+    d = t = z = nanosecond = None
 
     if type == 'D':
         # 100DDDDD DDDDDDDD DDDDDDDD
@@ -701,11 +707,11 @@ def unpackb(value):
         if precision == 0b00:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSS0000
-            millisecond = n >> 4 & MILLISECOND_MASK
+            nanosecond = (n >> 4 & MILLISECOND_MASK) * 1000000
         elif precision == 0b01:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
-            microsecond = n >> 2 & MICROSECOND_MASK
+            nanosecond = (n >> 2 & MICROSECOND_MASK) * 1000
         elif precision == 0b10:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
@@ -728,13 +734,13 @@ def unpackb(value):
         if precision == 0b00:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000
-            millisecond = n >> 11 & MILLISECOND_MASK
+            nanosecond = (n >> 11 & MILLISECOND_MASK) * 1000000
             z = n >> 4 & Z_MASK
         elif precision == 0b01:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSZ
             # ZZZZZZ00
-            microsecond = n >> 9 & MICROSECOND_MASK
+            nanosecond = (n >> 9 & MICROSECOND_MASK) * 1000
             z = n >> 2 & Z_MASK
         elif precision == 0b10:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
@@ -806,26 +812,12 @@ def unpackb(value):
     # Sub-second fields are either all None, or none are None.
     #
 
-    if millisecond is not None:
-        if millisecond > MILLISECOND_MAX:
-            raise ValueError("millisecond not within supported range")
-        microsecond = millisecond * 1000
-        nanosecond = microsecond * 1000
-    elif microsecond is not None:
-        if microsecond > MICROSECOND_MAX:
-            raise ValueError("microsecond not within supported range")
-        millisecond = microsecond // 1000
-        nanosecond = microsecond * 1000
-    elif nanosecond is not None:
-        if nanosecond > NANOSECOND_MAX:
-            raise ValueError("nanosecond not within supported range")
-        microsecond = nanosecond // 1000
-        millisecond = microsecond // 1000
+    if nanosecond is not None and nanosecond > NANOSECOND_MAX:
+        raise ValueError("sub-second precision not within supported range")
 
     return Moment(
         year, month, day,
-        hour, minute, second,
-        millisecond, microsecond, nanosecond,
+        hour, minute, second, nanosecond,
         tz_offset)
 
 

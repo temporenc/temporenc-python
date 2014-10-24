@@ -329,14 +329,14 @@ def test_range_check_unpacking():
         temporenc.unpackb(bytearray((
             0b01000000, 0b00000000, 0b00000000, 0b00000000,
             0b00000000, 0b00111111, 0b11110000)))
-    assert 'millisecond' in str(e.value)
+    assert 'sub-second' in str(e.value)
 
     # Type DTS with out of range microsecond
     with pytest.raises(ValueError) as e:
         temporenc.unpackb(bytearray((
             0b01010000, 0b00000000, 0b00000000, 0b00000000,
             0b00000000, 0b00111111, 0b11111111, 0b11111100)))
-    assert 'microsecond' in str(e.value)
+    assert 'sub-second' in str(e.value)
 
     # Type DTS with out of range nanosecond
     with pytest.raises(ValueError) as e:
@@ -344,7 +344,7 @@ def test_range_check_unpacking():
             0b01100000, 0b00000000, 0b00000000, 0b00000000,
             0b00000000, 0b00111111, 0b11111111, 0b11111111,
             0b11111111)))
-    assert 'nanosecond' in str(e.value)
+    assert 'sub-second' in str(e.value)
 
 
 def test_native_packing():

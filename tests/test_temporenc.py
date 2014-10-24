@@ -67,7 +67,7 @@ def test_type_dtz():
     v = temporenc.unpackb(expected)
     assert (v.year, v.month, v.day) == (1983, 1, 15)
     assert (v.hour, v.minute, v.second) == (17, 25, 12)
-    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+    assert v.tz_offset == 60
 
 
 def test_type_dts():
@@ -142,7 +142,7 @@ def test_type_dtsz():
     assert v.millisecond == 123
     assert v.microsecond == 123000
     assert v.nanosecond == 123000000
-    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+    assert v.tz_offset == 60
 
     actual = temporenc.packb(
         type='DTSZ',
@@ -152,7 +152,7 @@ def test_type_dtsz():
     dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
     assert actual == dtsz_us
     assert temporenc.unpackb(dtsz_us).microsecond == 123456
-    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+    assert v.tz_offset == 60
 
     actual = temporenc.packb(
         type='DTSZ',
@@ -162,7 +162,7 @@ def test_type_dtsz():
     dtsz_ns = from_hex('f3 df 83 a2 c9 83 ad e6 8a c4')
     assert actual == dtsz_ns
     assert temporenc.unpackb(dtsz_ns).nanosecond == 123456789
-    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+    assert v.tz_offset == 60
 
     actual = temporenc.packb(
         type='DTSZ',
@@ -175,7 +175,7 @@ def test_type_dtsz():
     assert v.millisecond is None
     assert v.millisecond is None
     assert v.millisecond is None
-    assert (v.tz_hour, v.tz_minute, v.tz_offset) == (1, 0, 60)
+    assert v.tz_offset == 60
 
 
 def test_type_detection():
@@ -396,7 +396,6 @@ def test_native_time_zone():
     moment = temporenc.unpackb(expected)
     assert moment.hour == 17       # internal fields are in UTC
     assert moment.tz_offset == 60  # tz_offset is stored alongside
-    assert (moment.tz_hour, moment.tz_minute) == (1, 0)
     as_utc = moment.datetime()
     assert as_utc.hour == 17
     assert as_utc.utcoffset() == datetime.timedelta(0)

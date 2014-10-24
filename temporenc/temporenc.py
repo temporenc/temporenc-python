@@ -127,14 +127,13 @@ class Moment(object):
 
     Each constituent part is accessible as an instance attribute. These
     are: ``year``, ``month``, ``day``, ``hour``, ``minute``, ``second``,
-    ``millisecond``, ``microsecond``, ``nanosecond``, ``tz_hour``,
-    ``tz_minute``, and ``tz_offset``. Since *temporenc* allows partial
-    date and time information, any attribute can be ``None``.
+    ``millisecond``, ``microsecond``, ``nanosecond``, and ``tz_offset``.
+    Since *temporenc* allows partial date and time information, any
+    attribute can be ``None``.
 
     The attributes for sub-second precision form a group that is either
     completely empty (all attributes are ``None``) or completely filled
-    (no attribute is ``None``). The same applies to the time zone
-    related attributes.
+    (no attribute is ``None``).
 
     This class is intended to be a read-only immutable data structure;
     assigning new values to attributes is not supported.
@@ -147,7 +146,7 @@ class Moment(object):
 
     Instances of this class can be compared to each other, with earlier
     dates sorting first. As with hashing, time zone information is not
-    taken into account, since the actual data must be in UTC in those
+    taken into account, since the actual data must is in UTC in those
     cases.
 
     .. note::
@@ -162,7 +161,7 @@ class Moment(object):
         'year', 'month', 'day',
         'hour', 'minute', 'second',
         'millisecond', 'microsecond', 'nanosecond',
-        'tz_hour', 'tz_minute', 'tz_offset',
+        'tz_offset',
         '_has_date', '_has_time', '_struct']
 
     def __init__(
@@ -204,20 +203,9 @@ class Moment(object):
             #: :py:attr:`microsecond` are also set.
             self.nanosecond = nanosecond
 
-        #: Time zone offset (total minutes). If set, :py:attr:`tz_hour`
-        #: and :py:attr:`tz_minute` are also set.
+        #: Time zone offset (total minutes). To calculate the hours and
+        #: minutes, use ``h, m = divmod(offset, 60)``.
         self.tz_offset = tz_offset
-
-        #: Time zone offset (hours part only) If set, :py:attr:`tz_offset`
-        #: and :py:attr:`tz_minute` are also set.
-        self.tz_hour = None
-
-        #: Time zone offset (minutes part only) If set,
-        #: :py:attr:`tz_offset` and :py:attr:`tz_hour` are also set.
-        self.tz_minute = None
-
-        if tz_offset is not None:
-            self.tz_hour, self.tz_minute = divmod(tz_offset, 60)
 
         self._has_date = not (year is None and month is None and day is None)
         self._has_time = not (hour is None and minute is None

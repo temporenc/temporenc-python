@@ -378,27 +378,54 @@ def test_native_packing():
     assert actual == expected
 
 
-def test_native_packing_time_zone():
+def test_native_time_zone():
 
-    # Python < 3.2 doesn't have concrete tzinfo implementations, so
-    # use the internal helper class instead to avoid depending on newer
-    # Python versions (or on pytz).
+    # Python < 3.2 doesn't have concrete tzinfo implementations. This
+    # test uses the internal helper class instead to avoid depending on
+    # newer Python versions (or on pytz).
     from temporenc.temporenc import _FixedOffset
-    tz = _FixedOffset(60)  # UTC +01:00
+
+    dutch_winter = _FixedOffset(60)  # UTC +01:00
 
     # DTZ
     actual = temporenc.packb(
-        datetime.datetime(1983, 1, 15, 18, 25, 12, 0, tzinfo=tz),
+        datetime.datetime(1983, 1, 15, 18, 25, 12, 0, tzinfo=dutch_winter),
         type='DTZ')
     expected = from_hex('cf 7e 0e 8b 26 44')
     assert actual == expected
+    moment = temporenc.unpackb(expected)
+    assert moment.hour == 17       # internal fields are in UTC
+    assert moment.tz_offset == 60  # tz_offset is stored alongside
+    assert (moment.tz_hour, moment.tz_minute) == (1, 0)
+    as_utc = moment.datetime()
+    assert as_utc.hour == 17
+    assert as_utc.utcoffset() == datetime.timedelta(0)
+    as_local = moment.datetime(local=True)
+    assert as_local.hour == 18
+    assert as_local.utcoffset() == datetime.timedelta(minutes=60)
 
     # DTSZ (microsecond, since native types have that precision)
     actual = temporenc.packb(
-        datetime.datetime(1983, 1, 15, 18, 25, 12, 123456, tzinfo=tz),
+        datetime.datetime(
+            1983, 1, 15, 18, 25, 12, 123456,
+            tzinfo=dutch_winter),
         type='DTSZ')
     dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
     assert actual == dtsz_us
+    moment = temporenc.unpackb(expected)
+    assert moment.datetime().hour == 17
+    assert moment.datetime(local=True).hour == 18
+
+    # Year transition with time zones
+    moment = temporenc.unpackb(temporenc.packb(
+        datetime.datetime(2014, 1, 1, 0, 30, 0, tzinfo=dutch_winter),
+        type='DTZ'))
+    assert moment.date().year == 2013
+    assert moment.datetime().year == 2013
+    assert moment.date(local=True).year == 2014
+    assert moment.datetime(local=True).year == 2014
+    assert moment.time().hour == 23
+    assert moment.time(local=True).hour == 0
 
 
 def test_native_packing_with_overrides():

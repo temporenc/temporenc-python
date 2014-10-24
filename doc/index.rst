@@ -124,6 +124,10 @@ converted to the standard date and time classes using the
     >>> moment.time()
     datetime.time(18, 45, 23, 612883)
 
+Conversion to and from classes from the ``datetime`` module have full time zone
+support. See the API docs for :py:meth:`Moment.datetime` for more details about
+time zone handling.
+
 .. warning::
 
    The Python ``temporenc`` module only concerns itself with encoding and

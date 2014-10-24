@@ -108,6 +108,8 @@ class _FixedOffset(datetime.tzinfo):
     def __repr__(self):
         return '<{}>'.format(self._name)
 
+UTC = _FixedOffset(0)
+
 
 #
 # Public API
@@ -298,7 +300,7 @@ class Moment(object):
     def __hash__(self):
         return hash(self._struct)
 
-    def datetime(self, strict=True):
+    def datetime(self, strict=True, local=False):
         """
         Convert this value to a ``datetime.datetime`` instance.
 
@@ -316,16 +318,82 @@ class Moment(object):
         any application logic, but at least this allows applications to
         use things like ``.strftime()`` on partial dates and times.
 
+        The *temporenc* format allows supports inclusion of a time zone
+        offset. Date and time information in the *temporenc* types
+        ``DTZ`` and ``DTSZ`` is always stored as UTC, but the original
+        UTC offset is included, which makes conversion to the original
+        local time possible. When converting to a ``datetime`` instance,
+        time zone information is handled as follows:
+
+        * When no time zone information was present in the original data
+          (e.g. when unpacking *temporenc* type ``DT``), the return
+          value will be a naive `datetime` instance, i.e. its ``tzinfo``
+          attribute is `None`.
+
+        * If the original data did include time zone information, the
+          return value will be a time zone aware instance. No conversion
+          to local time is performed by default, which means the
+          instance will have a ``tzinfo`` attribute corresponding to
+          UTC. This means time zone information will be lost, and the
+          return value will be in UTC.
+
+          If this is not desired, i.e. the application wants to access
+          the original local time, set the `local` argument to `True`.
+          In that case the data will be converted to local time, and the
+          return value will have a ``tzinfo`` attribute corresponding to
+          the time zone offset.
+
         :param bool strict: whether to use strict conversion rules
+        :param bool local: whether to convert to local time
         :return: converted value
         :type: `datetime.datetime`
         """
-        # FIXME: this indirect construction is a bit slow...
-        return datetime.datetime.combine(
-            self.date(strict=strict),
-            self.time(strict=strict))
 
-    def date(self, strict=True):
+        if strict:
+            if None in (self.year, self.month, self.day):
+                raise ValueError("incomplete date information")
+            if None in (self.hour, self.minute, self.second):
+                raise ValueError("incomplete time information")
+
+        hour, minute, second = self.hour, self.minute, self.second
+        year, month, day = self.year, self.month, self.day
+
+        # The stdlib's datetime classes always specify microseconds.
+        us = self.microsecond if self.microsecond is not None else 0
+
+        if not strict:
+            # Substitute defaults for missing values.
+            if year is None:
+                year = 1
+
+            if month is None:
+                month = 1
+
+            if day is None:
+                day = 1
+
+            if hour is None:
+                hour = 0
+
+            if minute is None:
+                minute = 0
+
+            if second is None:
+                second = 0
+            elif second == 60:  # assume that this is a leap second
+                second = 59
+
+        dt = datetime.datetime(
+            year, month, day,
+            hour, minute, second, us,
+            tzinfo=None if self.tz_offset is None else UTC)
+
+        if local and dt.tzinfo is not None:
+            dt = dt.astimezone(_FixedOffset(self.tz_offset))
+
+        return dt
+
+    def date(self, strict=True, local=False):
         """
         Convert this value to a ``datetime.date`` instance.
 
@@ -333,21 +401,16 @@ class Moment(object):
         more information.
 
         :param bool strict: whether to use strict conversion rules
+        :param bool local: whether to convert to local time
         :return: converted value
         :type: `datetime.date`
         """
-        if not strict:
-            return datetime.date(
-                self.year if self.year is not None else 1,
-                self.month if self.month is not None else 1,
-                self.day if self.day is not None else 1)
-
-        if None in (self.year, self.month, self.day):
+        if strict and None in (self.year, self.month, self.day):
             raise ValueError("incomplete date information")
 
-        return datetime.date(self.year, self.month, self.day)
+        return self.datetime(strict=False, local=local).date()
 
-    def time(self, strict=True):
+    def time(self, strict=True, local=False):
         """
         Convert this value to a ``datetime.time`` instance.
 
@@ -355,30 +418,14 @@ class Moment(object):
         more information.
 
         :param bool strict: whether to use strict conversion rules
+        :param bool local: whether to convert to local time
         :return: converted value
         :type: `datetime.date`
         """
-        # The stdlib's datetime classes always specify microseconds.
-        us = self.microsecond if self.microsecond is not None else 0
-
-        if not strict:
-            if self.second is None:
-                second = 0
-            elif self.second == 60:
-                # Assumption: this is a leap second
-                second = 59
-            else:
-                second = self.second
-
-            return datetime.time(
-                self.hour if self.hour is not None else 0,
-                self.minute if self.minute is not None else 0,
-                second, us)
-
-        if None in (self.hour, self.minute, self.second):
+        if strict and None in (self.hour, self.minute, self.second):
             raise ValueError("incomplete time information")
 
-        return datetime.time(self.hour, self.minute, self.second, us)
+        return self.datetime(strict=False, local=local).time()
 
 
 def packb(

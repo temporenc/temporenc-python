@@ -191,3 +191,8 @@ Source code, including the test suite, is maintained at Github:
 
 Feel free to submit feedback, report issues, bring up improvement ideas, and
 contribute fixes!
+
+____
+
+
+.. include:: ../LICENSE.rst

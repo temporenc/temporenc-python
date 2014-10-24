@@ -378,6 +378,29 @@ def test_native_packing():
     assert actual == expected
 
 
+def test_native_packing_time_zone():
+
+    # Python < 3.2 doesn't have concrete tzinfo implementations, so
+    # use the internal helper class instead to avoid depending on newer
+    # Python versions (or on pytz).
+    from temporenc.temporenc import _FixedOffset
+    tz = _FixedOffset(60)  # UTC +01:00
+
+    # DTZ
+    actual = temporenc.packb(
+        datetime.datetime(1983, 1, 15, 18, 25, 12, 0, tzinfo=tz),
+        type='DTZ')
+    expected = from_hex('cf 7e 0e 8b 26 44')
+    assert actual == expected
+
+    # DTSZ (microsecond, since native types have that precision)
+    actual = temporenc.packb(
+        datetime.datetime(1983, 1, 15, 18, 25, 12, 123456, tzinfo=tz),
+        type='DTSZ')
+    dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
+    assert actual == dtsz_us
+
+
 def test_native_packing_with_overrides():
     actual = temporenc.packb(
         datetime.datetime(1984, 1, 16, 18, 26, 12, 123456),

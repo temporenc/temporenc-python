@@ -80,6 +80,35 @@ def _detect_type(first):
         return 'DTSZ', precision, DTSZ_LENGTHS[precision]
 
 
+class _FixedOffset(datetime.tzinfo):
+    """Time zone information for a fixed offset from UTC."""
+
+    # Python 2 does not have any concrete tzinfo implementations in its
+    # standard library, hence this implementation. This implementation
+    # is based on the examples in the Python docs, in particular:
+    # https://docs.python.org/3.4/library/datetime.html#tzinfo-objects
+
+    ZERO = datetime.timedelta(0)
+
+    def __init__(self, minutes):
+        self._offset = datetime.timedelta(minutes=minutes)
+        sign = '+' if minutes >= 0 else '-'
+        hours, minutes = divmod(minutes, 60)
+        self._name = 'UTC{0}{1:02d}:{2:02d}'.format(sign, hours, minutes)
+
+    def utcoffset(self, dt):
+        return self._offset
+
+    def tzname(self, dt):
+        return self._name
+
+    def dst(self, dt):
+        return self.ZERO
+
+    def __repr__(self):
+        return '<{}>'.format(self._name)
+
+
 #
 # Public API
 #
@@ -432,6 +461,17 @@ def packb(
 
         if isinstance(value, (datetime.datetime, datetime.time)):
             handled = True
+
+            if tz_offset is None:
+                # Extract time zone information for tz aware values.
+                delta = value.utcoffset()
+                if delta is not None:
+                    # This is a tz aware value. Convert to UTC and
+                    # obtain the offset from UTC. The tzinfo attribute
+                    # is not used, so don't bother setting it.
+                    value = value - delta
+                    tz_offset = int(delta.total_seconds()) // 60
+
             if hour is None:
                 hour = value.hour
             if minute is None:

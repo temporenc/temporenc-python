@@ -96,18 +96,19 @@ built-in ``datetime`` module::
     b'W\xde\x9bJ\xd5\xe5hL'
 
 As you can see, instead of specifying all the components manually, instances of
-the built-in ``datetime.datetime``, ``datetime.date``, and ``datetime.time``
-classes can be passed directly as the first argument to :py:func:`packb`.
+the built-in ``datetime.datetime`` class can be passed directly as the first
+argument to :py:func:`packb`. This also works for ``datetime.date`` and
+``datetime.time`` instances.
 
 Since the Python ``datetime`` module *always* uses microsecond precision, this
-library defaults to *temporenc* types with sub-second precision (e.g. ``DTS``).
-If no subsecond precision is required, you can specify a different type to save
-space::
+library defaults to *temporenc* types with sub-second precision (e.g. ``DTS``)
+when an instance of one of the ``datetime`` classes is passed. If no subsecond
+precision is required, you can specify a different type to save space::
 
     >>> temporenc.packb(now, type='DT')
     b'\x1fzm+W'
 
-The integration with the built-in ``datetime`` works both ways. Instances of the
+The integration with the ``datetime`` module works both ways. Instances of the
 :py:class:`Moment` class (as returned by the unpacking functions) can be
 converted to the standard date and time classes using the
 :py:meth:`~Moment.datetime`, :py:meth:`~Moment.date`, and

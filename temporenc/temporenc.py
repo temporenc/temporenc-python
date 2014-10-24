@@ -362,7 +362,7 @@ def packb(
     `D`, `T`, `DT`, `DTZ`, `DTS`, or `DTSZ`. If not specified, the most
     compact encoding that can represent the provided information will be
     determined automatically. Note that instances of the classes in the
-    ``datetime`` module always uses microsecond precision, so make sure
+    ``datetime`` module always use microsecond precision, so make sure
     to specify a more compact type if no sub-second precision is
     required.
 

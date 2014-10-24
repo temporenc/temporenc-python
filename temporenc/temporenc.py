@@ -112,8 +112,9 @@ class FixedOffset(datetime.tzinfo):
 # This cache maps offsets in minutes to FixedOffset instances. It is
 # augmented on demand.
 tz_cache = {
-    0: FixedOffset(0),  # UTC
+    0: FixedOffset(0),
 }
+UTC = tz_cache[0]
 
 
 #
@@ -388,18 +389,25 @@ class Moment(object):
             elif second == 60:  # assume that this is a leap second
                 second = 59
 
-        dt = datetime.datetime(
-            year, month, day,
-            hour, minute, second, us,
-            tzinfo=None if self.tz_offset is None else tz_cache[0])
-
-        if local and dt.tzinfo is not None:
+        if self.tz_offset is None:
+            tz = None
+        elif local:
             try:
                 tz = tz_cache[self.tz_offset]
             except KeyError:
                 tz_cache[self.tz_offset] = tz = FixedOffset(self.tz_offset)
+        else:
+            tz = UTC
 
-            dt = dt.astimezone(tz)
+        dt = datetime.datetime(
+            year, month, day,
+            hour, minute, second, us,
+            tzinfo=tz)
+
+        if tz is not None and tz is not UTC:
+            # The tzinfo attribute is correct already, but the value
+            # itself hasn't been converted from UTC yet.
+            dt += dt.utcoffset()
 
         return dt
 

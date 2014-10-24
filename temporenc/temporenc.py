@@ -80,7 +80,7 @@ def _detect_type(first):
         return 'DTSZ', precision, DTSZ_LENGTHS[precision]
 
 
-class _FixedOffset(datetime.tzinfo):
+class FixedOffset(datetime.tzinfo):
     """Time zone information for a fixed offset from UTC."""
 
     # Python 2 does not have any concrete tzinfo implementations in its
@@ -108,7 +108,12 @@ class _FixedOffset(datetime.tzinfo):
     def __repr__(self):
         return '<{}>'.format(self._name)
 
-UTC = _FixedOffset(0)
+
+# This cache maps offsets in minutes to FixedOffset instances. It is
+# augmented on demand.
+tz_cache = {
+    0: FixedOffset(0),  # UTC
+}
 
 
 #
@@ -386,10 +391,15 @@ class Moment(object):
         dt = datetime.datetime(
             year, month, day,
             hour, minute, second, us,
-            tzinfo=None if self.tz_offset is None else UTC)
+            tzinfo=None if self.tz_offset is None else tz_cache[0])
 
         if local and dt.tzinfo is not None:
-            dt = dt.astimezone(_FixedOffset(self.tz_offset))
+            try:
+                tz = tz_cache[self.tz_offset]
+            except KeyError:
+                tz_cache[self.tz_offset] = tz = FixedOffset(self.tz_offset)
+
+            dt = dt.astimezone(tz)
 
         return dt
 

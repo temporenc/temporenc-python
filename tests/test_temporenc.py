@@ -383,9 +383,9 @@ def test_native_time_zone():
     # Python < 3.2 doesn't have concrete tzinfo implementations. This
     # test uses the internal helper class instead to avoid depending on
     # newer Python versions (or on pytz).
-    from temporenc.temporenc import _FixedOffset
+    from temporenc.temporenc import FixedOffset
 
-    dutch_winter = _FixedOffset(60)  # UTC +01:00
+    dutch_winter = FixedOffset(60)  # UTC +01:00
 
     # DTZ
     actual = temporenc.packb(

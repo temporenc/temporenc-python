@@ -86,7 +86,7 @@ def _detect_type(first):
 
 class Moment(object):
     """
-    Container to represent a parsed temporenc value.
+    Container to represent a parsed *temporenc* value.
 
     Each constituent part is accessible as an instance attribute. These
     are: ``year``, ``month``, ``day``, ``hour``, ``minute``, ``second``,
@@ -410,7 +410,7 @@ def packb(
     :param int microsecond: microsecond (optional)
     :param int nanosecond: nanosecond (optional)
     :param int tz_offset: time zone offset in minutes from UTC (optional)
-    :return: encoded temporenc value
+    :return: encoded *temporenc* value
     :rtype: bytes
     """
 
@@ -632,12 +632,12 @@ def pack(fp, *args, **kwargs):
 
 def unpackb(value):
     """
-    Unpack a temporenc value from a byte string.
+    Unpack a *temporenc* value from a byte string.
 
     If no valid value could be read, this raises :py:exc:`ValueError`.
 
     :param bytes value: a byte string (or `bytearray`) to parse
-    :return: a parsed temporenc structure
+    :return: a parsed *temporenc* structure
     :rtype: :py:class:`Moment`
     """
 
@@ -823,15 +823,15 @@ def unpackb(value):
 
 def unpack(fp):
     """
-    Unpack a temporenc value from a file-like object.
+    Unpack a *temporenc* value from a file-like object.
 
     This function consumes exactly the number of bytes required to
-    unpack a single temporenc value.
+    unpack a single *temporenc* value.
 
     If no valid value could be read, this raises :py:exc:`ValueError`.
 
     :param file-like fp: readable file-like object
-    :return: a parsed temporenc structure
+    :return: a parsed *temporenc* structure
     :rtype: :py:class:`Moment`
     """
     first = fp.read(1)

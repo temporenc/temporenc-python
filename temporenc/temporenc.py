@@ -450,28 +450,28 @@ def packb(
     if value is not None:
         handled = False
 
-        if isinstance(value, (datetime.datetime, datetime.date)):
-            handled = True
-            if year is None:
-                year = value.year
-            if month is None:
-                month = value.month
-            if day is None:
-                day = value.day
-
         if isinstance(value, (datetime.datetime, datetime.time)):
-            handled = True
 
+            # Time zone handling
+            #
+            # Instances of the datetime.datetime and datetime.time class
+            # may carry time zone info. If that is the case, convert the
+            # instance to UTC and remember the UTC offset,
+            #
+            # If an explicit tz_offset arg was passed, that will have
+            # precedence, so no conversion and extraction will happen
+            # at all in that case.
             if tz_offset is None:
-                # Extract time zone information for tz aware values.
                 delta = value.utcoffset()
                 if delta is not None:
-                    # This is a tz aware value. Convert to UTC and
-                    # obtain the offset from UTC. The tzinfo attribute
-                    # is not used, so don't bother setting it.
+                    # Note: the tzinfo attribute of the converted
+                    # datetime (in UTC) is not used, so this code does
+                    # not even bother setting it.
                     value = value - delta
                     tz_offset = int(delta.total_seconds()) // 60
 
+            # Extract time fields
+            handled = True
             if hour is None:
                 hour = value.hour
             if minute is None:
@@ -481,6 +481,16 @@ def packb(
             if (millisecond is None and microsecond is None
                     and nanosecond is None):
                 microsecond = value.microsecond
+
+        if isinstance(value, (datetime.datetime, datetime.date)):
+            # Extract date fields
+            handled = True
+            if year is None:
+                year = value.year
+            if month is None:
+                month = value.month
+            if day is None:
+                day = value.day
 
         if not handled:
             raise ValueError("Cannot encode {0!r}".format(value))

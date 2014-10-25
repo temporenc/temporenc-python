@@ -60,7 +60,7 @@ To unpack a byte string, use :py:func:`unpackb`::
 
 As you can see, unpacking returns a :py:class:`Moment` instance. This class has
 a reasonable string representation, but it is generally more useful to access
-the individual components using one of the many attributes::
+the individual components using one of its many attributes::
 
     >>> print(moment.year)
     2014
@@ -78,11 +78,11 @@ information was set in this example, some of the attributes (e.g. `second`) are
 Integration with the ``datetime`` module
 ----------------------------------------
 
-Python has built-in support for date and time handling (the ``datetime``
-module), which is how applications usually work with date and time information.
-Instead of specifying all the fields manually when packing data, which is
-cumbersome and error-prone, the ``temporenc`` module integrates with the
-built-in ``datetime`` module::
+Python has built-in support for date and time handling, provided by the
+``datetime`` module in the standard library, which is how applications usually
+work with date and time information. Instead of specifying all the fields
+manually when packing data, which is cumbersome and error-prone, the
+``temporenc`` module integrates with the built-in ``datetime`` module::
 
     >>> import datetime
     >>> now = datetime.datetime.now()

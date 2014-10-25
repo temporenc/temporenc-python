@@ -447,12 +447,12 @@ def packb(
     ``datetime.date``, or ``datetime.time`` instance.
 
     The `type` specifies the *temporenc* type to use. Valid types are
-    `D`, `T`, `DT`, `DTZ`, `DTS`, or `DTSZ`. If not specified, the most
-    compact encoding that can represent the provided information will be
-    determined automatically. Note that instances of the classes in the
-    ``datetime`` module always use microsecond precision, so make sure
-    to specify a more compact type if no sub-second precision is
-    required.
+    ``D``, ``T``, ``DT``, ``DTZ``, ``DTS``, or ``DTSZ``. If not
+    specified, the most compact encoding that can represent the provided
+    information will be determined automatically. Note that instances of
+    the classes in the ``datetime`` module always use microsecond
+    precision, so make sure to specify a more compact type if no
+    sub-second precision is required.
 
     Most applications would only use the `value` and `type` arguments;
     the other arguments allow for encoding data that does not fit the
@@ -474,7 +474,7 @@ def packb(
     and `nanosecond`) must not be used together, since those are
     conceptually mutually exclusive.
 
-    .. note:
+    .. note::
 
        The `value` argument is the only positional argument. All other
        arguments *must* be specified as keyword arguments (even though

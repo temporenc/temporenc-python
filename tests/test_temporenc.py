@@ -378,6 +378,54 @@ def test_native_packing():
     assert actual == expected
 
 
+def test_native_packing_with_overrides():
+    actual = temporenc.packb(
+        datetime.datetime(1984, 1, 16, 18, 26, 12, 123456),
+        year=1983, day=15, minute=25)
+    expected = from_hex('57 bf 07 49 93 07 89 00')
+    assert actual == expected
+
+
+def test_native_unpacking():
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15))
+    assert value.date() == datetime.date(1983, 1, 15)
+
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15,
+        hour=1, minute=2, second=3, microsecond=456))
+    assert value.datetime() == datetime.datetime(1983, 1, 15, 1, 2, 3, 456)
+
+    value = temporenc.unpackb(temporenc.packb(
+        year=1983, month=1, day=15,  # will be ignored
+        hour=1, minute=2, second=3, microsecond=456))
+    assert value.time() == datetime.time(1, 2, 3, 456)
+
+    value = temporenc.unpackb(temporenc.packb(year=1234))
+    with pytest.raises(ValueError):
+        value.date()
+    assert value.date(strict=False).year == 1234
+    assert value.datetime(strict=False).year == 1234
+
+    value = temporenc.unpackb(temporenc.packb(hour=14))
+    with pytest.raises(ValueError):
+        value.time()
+    assert value.time(strict=False).hour == 14
+    assert value.datetime(strict=False).hour == 14
+
+
+def test_native_unpacking_leap_second():
+    value = temporenc.unpackb(temporenc.packb(
+        year=2013, month=6, day=30,
+        hour=23, minute=59, second=60))
+
+    with pytest.raises(ValueError):
+        value.datetime()  # second out of range
+
+    dt = value.datetime(strict=False)
+    assert dt == datetime.datetime(2013, 6, 30, 23, 59, 59)
+
+
 def test_native_time_zone():
 
     # Python < 3.2 doesn't have concrete tzinfo implementations. This
@@ -434,54 +482,6 @@ def test_native_time_zone():
     assert moment.time().utcoffset() == zero_delta
     assert moment.time(local=True).hour == 0
     assert moment.time(local=True).utcoffset() == hour_delta
-
-
-def test_native_packing_with_overrides():
-    actual = temporenc.packb(
-        datetime.datetime(1984, 1, 16, 18, 26, 12, 123456),
-        year=1983, day=15, minute=25)
-    expected = from_hex('57 bf 07 49 93 07 89 00')
-    assert actual == expected
-
-
-def test_native_unpacking():
-    value = temporenc.unpackb(temporenc.packb(
-        year=1983, month=1, day=15))
-    assert value.date() == datetime.date(1983, 1, 15)
-
-    value = temporenc.unpackb(temporenc.packb(
-        year=1983, month=1, day=15,
-        hour=1, minute=2, second=3, microsecond=456))
-    assert value.datetime() == datetime.datetime(1983, 1, 15, 1, 2, 3, 456)
-
-    value = temporenc.unpackb(temporenc.packb(
-        year=1983, month=1, day=15,  # will be ignored
-        hour=1, minute=2, second=3, microsecond=456))
-    assert value.time() == datetime.time(1, 2, 3, 456)
-
-    value = temporenc.unpackb(temporenc.packb(year=1234))
-    with pytest.raises(ValueError):
-        value.date()
-    assert value.date(strict=False).year == 1234
-    assert value.datetime(strict=False).year == 1234
-
-    value = temporenc.unpackb(temporenc.packb(hour=14))
-    with pytest.raises(ValueError):
-        value.time()
-    assert value.time(strict=False).hour == 14
-    assert value.datetime(strict=False).hour == 14
-
-
-def test_native_unpacking_leap_second():
-    value = temporenc.unpackb(temporenc.packb(
-        year=2013, month=6, day=30,
-        hour=23, minute=59, second=60))
-
-    with pytest.raises(ValueError):
-        value.datetime()  # second out of range
-
-    dt = value.datetime(strict=False)
-    assert dt == datetime.datetime(2013, 6, 30, 23, 59, 59)
 
 
 def test_string_conversion():

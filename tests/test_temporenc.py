@@ -386,6 +386,8 @@ def test_native_time_zone():
     from temporenc.temporenc import FixedOffset
 
     dutch_winter = FixedOffset(60)  # UTC +01:00
+    zero_delta = datetime.timedelta(0)
+    hour_delta = datetime.timedelta(minutes=60)
 
     # DTZ
     actual = temporenc.packb(
@@ -398,10 +400,10 @@ def test_native_time_zone():
     assert moment.tz_offset == 60  # tz_offset is stored alongside
     as_utc = moment.datetime()
     assert as_utc.hour == 17
-    assert as_utc.utcoffset() == datetime.timedelta(0)
+    assert as_utc.utcoffset() == zero_delta
     as_local = moment.datetime(local=True)
     assert as_local.hour == 18
-    assert as_local.utcoffset() == datetime.timedelta(minutes=60)
+    assert as_local.utcoffset() == hour_delta
 
     # DTSZ (microsecond, since native types have that precision)
     actual = temporenc.packb(
@@ -419,12 +421,19 @@ def test_native_time_zone():
     moment = temporenc.unpackb(temporenc.packb(
         datetime.datetime(2014, 1, 1, 0, 30, 0, tzinfo=dutch_winter),
         type='DTZ'))
+
     assert moment.date().year == 2013
-    assert moment.datetime().year == 2013
     assert moment.date(local=True).year == 2014
+
+    assert moment.datetime().year == 2013
+    assert moment.datetime().utcoffset() == zero_delta
     assert moment.datetime(local=True).year == 2014
+    assert moment.datetime(local=True).utcoffset() == hour_delta
+
     assert moment.time().hour == 23
+    assert moment.time().utcoffset() == zero_delta
     assert moment.time(local=True).hour == 0
+    assert moment.time(local=True).utcoffset() == hour_delta
 
 
 def test_native_packing_with_overrides():

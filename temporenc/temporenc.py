@@ -431,7 +431,7 @@ class Moment(object):
         if strict and None in (self.hour, self.minute, self.second):
             raise ValueError("incomplete time information")
 
-        return self.datetime(strict=False, local=local).time()
+        return self.datetime(strict=False, local=local).timetz()
 
 
 def packb(

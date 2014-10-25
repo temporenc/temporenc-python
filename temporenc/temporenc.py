@@ -411,8 +411,13 @@ class Moment(object):
         :return: converted value
         :type: `datetime.date`
         """
-        if strict and None in (self.year, self.month, self.day):
-            raise ValueError("incomplete date information")
+        if strict:
+            if None in (self.year, self.month, self.day):
+                raise ValueError("incomplete date information")
+
+            if not local:
+                # Shortcut for performance reasons
+                return datetime.date(self.year, self.month, self.day)
 
         return self.datetime(strict=False, local=local).date()
 
@@ -428,8 +433,16 @@ class Moment(object):
         :return: converted value
         :type: `datetime.date`
         """
-        if strict and None in (self.hour, self.minute, self.second):
-            raise ValueError("incomplete time information")
+        if strict:
+            if None in (self.hour, self.minute, self.second):
+                raise ValueError("incomplete time information")
+
+            if not local:
+                # Shortcut for performance reasons
+                return datetime.time(
+                    self.hour, self.minute, self.second,
+                    self.microsecond if self.microsecond is not None else 0,
+                    tzinfo=None if self.tz_offset is None else UTC)
 
         return self.datetime(strict=False, local=local).timetz()
 

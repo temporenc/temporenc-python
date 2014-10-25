@@ -526,23 +526,32 @@ def packb(
 
         if isinstance(value, (datetime.datetime, datetime.time)):
 
-            # Time zone handling
-            #
-            # Instances of the datetime.datetime and datetime.time class
-            # may carry time zone info. If that is the case, convert the
-            # instance to UTC and remember the UTC offset,
-            #
-            # If an explicit tz_offset arg was passed, that will have
-            # precedence, so no conversion and extraction will happen
-            # at all in that case.
+            # Handle time zone information. Instances of the
+            # datetime.datetime and datetime.time classes may have an
+            # associated time zone. If that is the case, convert the
+            # instance to UTC and remember the UTC offset. If an
+            # explicit tz_offset arg was passed to this function, that
+            # one has precedence, and no conversion will happen.
             if tz_offset is None:
                 delta = value.utcoffset()
                 if delta is not None:
-                    # Note: the tzinfo attribute of the converted
-                    # datetime (in UTC) is not used, so this code does
-                    # not even bother setting it.
-                    value = value - delta
                     tz_offset = int(delta.total_seconds()) // 60
+                    # Note: the tzinfo attribute of the converted value
+                    # (in UTC) is not used, so this code does not bother
+                    # setting it.
+                    if isinstance(value, datetime.datetime):
+                        # Since datetime.datetime instances support
+                        # arithmentic, this is one is simple.
+                        value = value - delta
+                    else:
+                        # Since datetime.time instances do not support
+                        # arithmetic, change hour and minute fields
+                        # manually. The *args hack with divmod()'s
+                        # return value is just to avoid introducing even
+                        # more local variables.
+                        value = value.replace(*divmod(
+                            (value.hour * 60 + value.minute - tz_offset)
+                            % 1440, 60))
 
             # Extract time fields
             handled = True

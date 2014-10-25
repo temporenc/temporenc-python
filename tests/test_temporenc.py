@@ -469,19 +469,29 @@ def test_native_time_zone():
     moment = temporenc.unpackb(temporenc.packb(
         datetime.datetime(2014, 1, 1, 0, 30, 0, tzinfo=dutch_winter),
         type='DTZ'))
-
     assert moment.date().year == 2013
     assert moment.date(local=True).year == 2014
-
     assert moment.datetime().year == 2013
     assert moment.datetime().utcoffset() == zero_delta
     assert moment.datetime(local=True).year == 2014
     assert moment.datetime(local=True).utcoffset() == hour_delta
-
     assert moment.time().hour == 23
     assert moment.time().utcoffset() == zero_delta
     assert moment.time(local=True).hour == 0
     assert moment.time(local=True).utcoffset() == hour_delta
+
+    # Time only with time zone
+    moment = temporenc.unpackb(temporenc.packb(
+        datetime.time(0, 30, 0, 123456, tzinfo=dutch_winter),
+        type='DTSZ'))
+    assert moment.tz_offset == 60
+    for obj in [moment.time(), moment.datetime(strict=False)]:
+        assert (obj.hour, obj.minute, obj.microsecond) == (23, 30, 123456)
+        assert obj.utcoffset() == zero_delta
+    for obj in [moment.time(local=True),
+                moment.datetime(strict=False, local=True)]:
+        assert (obj.hour, obj.minute, obj.microsecond) == (0, 30, 123456)
+        assert obj.utcoffset() == hour_delta
 
 
 def test_string_conversion():

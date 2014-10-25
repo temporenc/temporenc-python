@@ -5,8 +5,26 @@ Python library for *temporenc*
 This is a Python library implementing the `temporenc format
 <https://github.com/wbolster/temporenc>`_ for dates and times.
 
+Features:
 
-.. contents:: Contents
+* Support for all *temporenc* types
+
+* Interoperability with the ``datetime`` module
+
+* Time zone support, including conversion to local time
+
+* Compatibility with both Python 2 and Python 3
+
+* Decent performance
+
+* Permissive BSD license
+
+____
+
+
+.. rubric:: Contents
+
+.. contents::
    :local:
 
 ____

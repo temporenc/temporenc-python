@@ -312,12 +312,12 @@ class Moment(object):
         any application logic, but at least this allows applications to
         use things like ``.strftime()`` on partial dates and times.
 
-        The *temporenc* format allows supports inclusion of a time zone
-        offset. Date and time information in the *temporenc* types
-        ``DTZ`` and ``DTSZ`` is always stored as UTC, but the original
-        UTC offset is included, which makes conversion to the original
-        local time possible. When converting to a ``datetime`` instance,
-        time zone information is handled as follows:
+        The *temporenc* format allows inclusion of a time zone offset.
+        Date and time information in the *temporenc* types ``DTZ`` and
+        ``DTSZ`` is always stored as UTC, but the original UTC offset is
+        included, which makes conversion to the original local time
+        possible. When converting to a ``datetime`` instance, time zone
+        information is handled as follows:
 
         * When no time zone information was present in the original data
           (e.g. when unpacking *temporenc* type ``DT``), the return

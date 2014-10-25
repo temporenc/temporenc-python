@@ -511,6 +511,12 @@ def test_string_conversion():
         hour=12, minute=34, second=56, microsecond=0))
     assert str(value) == "12:34:56.0"
 
+    # Time zone info should be included
+    moment = temporenc.unpackb(from_hex('cf 7e 0e 8b 26 40'))
+    assert str(moment) == '1983-01-15 17:25:12 (UTC)'
+    moment = temporenc.unpackb(from_hex('cf 7e 0e 8b 26 44'))
+    assert str(moment) == '1983-01-15 17:25:12 (UTC; original offset +01:00)'
+
     # Very contrived example...
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))
     assert str(value) == "??:??:??.00125"

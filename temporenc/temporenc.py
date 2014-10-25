@@ -252,9 +252,17 @@ class Moment(object):
             else:
                 buf.append(".{0:09d}".format(self.nanosecond).rstrip("0"))
 
-        # TODO: also include time zone. This is *not* just +hh:mm (like
-        # in ISO 8601 notation) since the semantics are different
-        # (temporenc stores info in UTC, not in local time)
+        # Time zone representation is *not* just +hh:mm (like in ISO
+        # 8601 notation) since the semantics are different (temporenc
+        # stores info in UTC, not in local time).
+        if self.tz_offset is not None:
+            if self.tz_offset == 0:
+                buf.append(' (UTC)')
+            else:
+                h, m = divmod(self.tz_offset, 60)
+                sign = '+' if h >= 0 else '-'
+                buf.append(' (UTC; original offset {0}{1:02d}:{2:02d})'.format(
+                    sign, h, m))
 
         return ''.join(buf)
 

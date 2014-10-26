@@ -152,10 +152,7 @@ class Moment(object):
     .. note::
 
        This class must not be instantiated directly; use one of the
-       unpacking functions like :py:func:`unpackb()` instead. The only
-       reason this class is part of the public API is to allow type
-       checking in application code, e.g. ``isinstance(x,
-       temporenc.Moment)``.
+       unpacking functions like :py:func:`unpackb()` instead.
     """
     __slots__ = [
         'year', 'month', 'day',

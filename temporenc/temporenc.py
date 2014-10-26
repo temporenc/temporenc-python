@@ -146,7 +146,7 @@ class Moment(object):
 
     Instances of this class can be compared to each other, with earlier
     dates sorting first. As with hashing, time zone information is not
-    taken into account, since the actual data must is in UTC in those
+    taken into account, since the actual data must be in UTC in those
     cases.
 
     .. note::

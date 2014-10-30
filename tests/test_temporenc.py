@@ -437,6 +437,12 @@ def test_native_time_zone():
     zero_delta = datetime.timedelta(0)
     hour_delta = datetime.timedelta(minutes=60)
 
+    expected_name = "UTC+01:00"
+    assert dutch_winter.tzname(None) == expected_name
+    assert expected_name in str(dutch_winter)
+    assert expected_name in repr(dutch_winter)
+    assert dutch_winter.dst(None) == zero_delta
+
     # DTZ
     actual = temporenc.packb(
         datetime.datetime(1983, 1, 15, 18, 25, 12, 0, tzinfo=dutch_winter),

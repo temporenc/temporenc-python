@@ -13,7 +13,7 @@ PY2 = sys.version_info[0] == 2
 
 def from_hex(s):
     """Compatibility helper like bytes.fromhex() in Python 3"""
-    return binascii.unhexlify(s.replace(' ', ''))
+    return binascii.unhexlify(s.replace(' ', '').encode('ascii'))
 
 
 def test_type_d():

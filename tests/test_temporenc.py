@@ -426,6 +426,20 @@ def test_native_unpacking_leap_second():
     assert dt == datetime.datetime(2013, 6, 30, 23, 59, 59)
 
 
+def test_native_unpacking_incomplete():
+    moment = temporenc.unpackb(temporenc.packb(type='DT', year=1983, hour=12))
+    with pytest.raises(ValueError):
+        moment.date()
+    with pytest.raises(ValueError):
+        moment.time()
+    with pytest.raises(ValueError):
+        moment.datetime()
+
+    moment = temporenc.unpackb(temporenc.packb(datetime.datetime.now().date()))
+    with pytest.raises(ValueError):
+        moment.datetime()
+
+
 def test_native_time_zone():
 
     # Python < 3.2 doesn't have concrete tzinfo implementations. This

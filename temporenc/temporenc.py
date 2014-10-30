@@ -106,7 +106,7 @@ class FixedOffset(datetime.tzinfo):
         return self.ZERO
 
     def __repr__(self):
-        return '<{}>'.format(self._name)
+        return '<{0}>'.format(self._name)
 
 
 # This cache maps offsets in minutes to FixedOffset instances. It is

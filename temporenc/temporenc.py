@@ -532,7 +532,7 @@ def packb(
             if tz_offset is None:
                 delta = value.utcoffset()
                 if delta is not None:
-                    tz_offset = int(delta.total_seconds()) // 60
+                    tz_offset = delta.days * 1440 + delta.seconds // 60
                     # Note: the tzinfo attribute of the converted value
                     # (in UTC) is not used, so this code does not bother
                     # setting it.

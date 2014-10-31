@@ -3,7 +3,7 @@ Python library for *temporenc*
 ******************************
 
 This is a Python library implementing the `temporenc format
-<https://github.com/wbolster/temporenc>`_ for dates and times.
+<http://temporenc.org>`_ for dates and times.
 
 Features:
 

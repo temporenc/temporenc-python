@@ -18,4 +18,4 @@ test:
 	@echo "Running tests"
 	@echo "============="
 	@echo
-	py.test
+	py.test tests/

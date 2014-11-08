@@ -293,9 +293,14 @@ def test_out_of_range_values():
 
 
 def test_unpacking_bogus_data():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         # First byte can never occur in valid values.
         temporenc.unpackb(from_hex('bb 12 34'))
+    assert 'tag' in str(e.value)
+
+    with pytest.raises(ValueError) as e:
+        temporenc.unpackb(from_hex('47 bf 07 49 93 07 b2'))
+    assert 'padding' in str(e.value)
 
 
 def test_range_check_unpacking():

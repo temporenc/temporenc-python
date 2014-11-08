@@ -800,7 +800,7 @@ def unpackb(value):
                 "got {3:d}".format(
                     type, precision, expected_length, len(value)))
 
-    date = time = tz_offset = nanosecond = None
+    date = time = tz_offset = nanosecond = padding = None
 
     if type == 'D':
         # 100DDDDD DDDDDDDD DDDDDDDD
@@ -838,10 +838,12 @@ def unpackb(value):
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSS0000
             nanosecond = (n >> 4 & MILLISECOND_MASK) * 1000000
+            padding = n & 0b1111
         elif precision == 0b01:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSS00
             nanosecond = (n >> 2 & MICROSECOND_MASK) * 1000
+            padding = n & 0b11
         elif precision == 0b10:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TTSSSSSS SSSSSSSS SSSSSSSS
@@ -850,7 +852,7 @@ def unpackb(value):
         elif precision == 0b11:
             # 01PPDDDD DDDDDDDD DDDDDDDD DTTTTTTT
             # TTTTTTTT TT000000
-            pass
+            padding = n & 0b111111
 
     elif type == 'DTSZ':
         # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
@@ -866,12 +868,14 @@ def unpackb(value):
             # TTTTTTTT TTTSSSSS SSSSSZZZ ZZZZ0000
             nanosecond = (n >> 11 & MILLISECOND_MASK) * 1000000
             tz_offset = n >> 4 & Z_MASK
+            padding = n & 0b1111
         elif precision == 0b01:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSZ
             # ZZZZZZ00
             nanosecond = (n >> 9 & MICROSECOND_MASK) * 1000
             tz_offset = n >> 2 & Z_MASK
+            padding = n & 0b11
         elif precision == 0b10:
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTSSSSS SSSSSSSS SSSSSSSS
@@ -882,6 +886,10 @@ def unpackb(value):
             # 111PPDDD DDDDDDDD DDDDDDDD DDTTTTTT
             # TTTTTTTT TTTZZZZZ ZZ000000
             tz_offset = n >> 6 & Z_MASK
+            padding = n & 0b111111
+
+    if padding:
+        raise ValueError("padding bits must be zero")
 
     #
     # Split D and T components

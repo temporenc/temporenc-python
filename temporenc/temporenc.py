@@ -660,7 +660,7 @@ def packb(
     else:
         z, remainder = divmod(tz_offset, 15)
         if remainder:
-            raise ValueError("'tz_offset' must be a multiple of 15")
+            raise ValueError("tz_offset must be a multiple of 15")
         z += 64
         if not 0 <= z <= TIMEZONE_MAX:
             raise ValueError("tz_offset not within supported range")

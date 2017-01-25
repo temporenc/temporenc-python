@@ -345,7 +345,7 @@ class Moment(object):
         :param bool strict: whether to use strict conversion rules
         :param bool local: whether to convert to local time
         :return: converted value
-        :type: `datetime.datetime`
+        :rtype: `datetime.datetime`
         """
 
         if strict:
@@ -414,7 +414,7 @@ class Moment(object):
         :param bool strict: whether to use strict conversion rules
         :param bool local: whether to convert to local time
         :return: converted value
-        :type: `datetime.date`
+        :rtype: `datetime.date`
         """
         if strict:
             if None in (self.year, self.month, self.day):
@@ -436,7 +436,7 @@ class Moment(object):
         :param bool strict: whether to use strict conversion rules
         :param bool local: whether to convert to local time
         :return: converted value
-        :type: `datetime.date`
+        :rtype: `datetime.time`
         """
         if strict:
             if None in (self.hour, self.minute, self.second):

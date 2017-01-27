@@ -217,6 +217,8 @@ ____
 Version history
 ===============
 
+* x.y (not yet released)
+
 * 0.1
 
   Release date: 2014-10-30

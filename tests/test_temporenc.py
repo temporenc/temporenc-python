@@ -54,19 +54,17 @@ def test_type_dt():
 
 def test_type_dtz():
 
-    # Note: hour is adjusted for UTC
-
     actual = temporenc.packb(
         type='DTZ',
         year=1983, month=1, day=15,
-        hour=17, minute=25, second=12,
+        hour=18, minute=25, second=12,
         tz_offset=60)
-    expected = from_hex('cf 7e 0e 8b 26 44')
+    expected = from_hex('cf 7e 0e 93 26 44')
     assert actual == expected
 
     v = temporenc.unpackb(expected)
     assert (v.year, v.month, v.day) == (1983, 1, 15)
-    assert (v.hour, v.minute, v.second) == (17, 25, 12)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
     assert v.tz_offset == 60
 
 
@@ -127,18 +125,16 @@ def test_type_dts():
 
 def test_type_dtsz():
 
-    # Note: hour is adjusted for UTC
-
     actual = temporenc.packb(
         type='DTSZ',
         year=1983, month=1, day=15,
-        hour=17, minute=25, second=12, millisecond=123,
+        hour=18, minute=25, second=12, millisecond=123,
         tz_offset=60)
-    dtsz_ms = from_hex('e3 df 83 a2 c9 83 dc 40')
+    dtsz_ms = from_hex('e3 df 83 a4 c9 83 dc 40')
     assert actual == dtsz_ms
     v = temporenc.unpackb(dtsz_ms)
     assert (v.year, v.month, v.day) == (1983, 1, 15)
-    assert (v.hour, v.minute, v.second) == (17, 25, 12)
+    assert (v.hour, v.minute, v.second) == (18, 25, 12)
     assert v.millisecond == 123
     assert v.microsecond == 123000
     assert v.nanosecond == 123000000
@@ -147,9 +143,9 @@ def test_type_dtsz():
     actual = temporenc.packb(
         type='DTSZ',
         year=1983, month=1, day=15,
-        hour=17, minute=25, second=12, microsecond=123456,
+        hour=18, minute=25, second=12, microsecond=123456,
         tz_offset=60)
-    dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
+    dtsz_us = from_hex('eb df 83 a4 c9 83 c4 81 10')
     assert actual == dtsz_us
     assert temporenc.unpackb(dtsz_us).microsecond == 123456
     assert v.tz_offset == 60
@@ -157,9 +153,9 @@ def test_type_dtsz():
     actual = temporenc.packb(
         type='DTSZ',
         year=1983, month=1, day=15,
-        hour=17, minute=25, second=12, nanosecond=123456789,
+        hour=18, minute=25, second=12, nanosecond=123456789,
         tz_offset=60)
-    dtsz_ns = from_hex('f3 df 83 a2 c9 83 ad e6 8a c4')
+    dtsz_ns = from_hex('f3 df 83 a4 c9 83 ad e6 8a c4')
     assert actual == dtsz_ns
     assert temporenc.unpackb(dtsz_ns).nanosecond == 123456789
     assert v.tz_offset == 60
@@ -167,9 +163,9 @@ def test_type_dtsz():
     actual = temporenc.packb(
         type='DTSZ',
         year=1983, month=1, day=15,
-        hour=17, minute=25, second=12,
+        hour=18, minute=25, second=12,
         tz_offset=60)
-    dtsz_none = from_hex('fb df 83 a2 c9 91 00')
+    dtsz_none = from_hex('fb df 83 a4 c9 91 00')
     assert actual == dtsz_none
     v = temporenc.unpackb(dtsz_none)
     assert v.millisecond is None
@@ -466,17 +462,14 @@ def test_native_time_zone():
     actual = temporenc.packb(
         datetime.datetime(1983, 1, 15, 18, 25, 12, 0, tzinfo=dutch_winter),
         type='DTZ')
-    expected = from_hex('cf 7e 0e 8b 26 44')
+    expected = from_hex('cf 7e 0e 93 26 44')
     assert actual == expected
     moment = temporenc.unpackb(expected)
-    assert moment.hour == 17       # internal fields are in UTC
-    assert moment.tz_offset == 60  # tz_offset is stored alongside
-    as_utc = moment.datetime()
-    assert as_utc.hour == 17
-    assert as_utc.utcoffset() == zero_delta
-    as_local = moment.datetime(local=True)
-    assert as_local.hour == 18
-    assert as_local.utcoffset() == hour_delta
+    assert moment.hour == 18
+    assert moment.tz_offset == 60
+    dt = moment.datetime()
+    assert dt.hour == 18
+    assert dt.utcoffset() == hour_delta
 
     # DTSZ (microsecond, since native types have that precision)
     actual = temporenc.packb(
@@ -484,26 +477,10 @@ def test_native_time_zone():
             1983, 1, 15, 18, 25, 12, 123456,
             tzinfo=dutch_winter),
         type='DTSZ')
-    dtsz_us = from_hex('eb df 83 a2 c9 83 c4 81 10')
+    dtsz_us = from_hex('eb df 83 a4 c9 83 c4 81 10')
     assert actual == dtsz_us
     moment = temporenc.unpackb(expected)
-    assert moment.datetime().hour == 17
-    assert moment.datetime(local=True).hour == 18
-
-    # Year transition with time zones
-    moment = temporenc.unpackb(temporenc.packb(
-        datetime.datetime(2014, 1, 1, 0, 30, 0, tzinfo=dutch_winter),
-        type='DTZ'))
-    assert moment.date().year == 2013
-    assert moment.date(local=True).year == 2014
-    assert moment.datetime().year == 2013
-    assert moment.datetime().utcoffset() == zero_delta
-    assert moment.datetime(local=True).year == 2014
-    assert moment.datetime(local=True).utcoffset() == hour_delta
-    assert moment.time().hour == 23
-    assert moment.time().utcoffset() == zero_delta
-    assert moment.time(local=True).hour == 0
-    assert moment.time(local=True).utcoffset() == hour_delta
+    assert moment.datetime().hour == 18
 
     # Time only with time zone
     moment = temporenc.unpackb(temporenc.packb(
@@ -511,10 +488,6 @@ def test_native_time_zone():
         type='DTSZ'))
     assert moment.tz_offset == 60
     for obj in [moment.time(), moment.datetime(strict=False)]:
-        assert (obj.hour, obj.minute, obj.microsecond) == (23, 30, 123456)
-        assert obj.utcoffset() == zero_delta
-    for obj in [moment.time(local=True),
-                moment.datetime(strict=False, local=True)]:
         assert (obj.hour, obj.minute, obj.microsecond) == (0, 30, 123456)
         assert obj.utcoffset() == hour_delta
 
@@ -547,10 +520,10 @@ def test_string_conversion():
     assert str(value) == "12:34:56.0"
 
     # Time zone info should be included
-    moment = temporenc.unpackb(from_hex('cf 7e 0e 8b 26 40'))
-    assert str(moment) == '1983-01-15 17:25:12 (UTC)'
-    moment = temporenc.unpackb(from_hex('cf 7e 0e 8b 26 44'))
-    assert str(moment) == '1983-01-15 17:25:12 (UTC; original offset +01:00)'
+    moment = temporenc.unpackb(from_hex('cf 7e 0e 93 26 40'))
+    assert str(moment) == '1983-01-15 18:25:12Z'
+    moment = temporenc.unpackb(from_hex('cf 7e 0e 93 26 44'))
+    assert str(moment) == '1983-01-15 18:25:12+01:00'
 
     # Very contrived example...
     value = temporenc.unpackb(temporenc.packb(microsecond=1250))

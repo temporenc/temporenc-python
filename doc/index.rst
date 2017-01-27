@@ -219,6 +219,9 @@ Version history
 
 * x.y (not yet released)
 
+  * no longer perform utc conversion, see
+    `temporenc#8 <https://github.com/temporenc/temporenc/issues/8>`_
+
 * 0.1
 
   Release date: 2014-10-30

@@ -214,4 +214,17 @@ contribute fixes!
 ____
 
 
+Version history
+===============
+
+* 0.1
+
+  Release date: 2014-10-30
+
+  Initial public release.
+
+____
+
+.. license is in a separate file
+
 .. include:: ../LICENSE.rst

@@ -109,12 +109,21 @@ class FixedOffset(datetime.tzinfo):
         return '<{0}>'.format(self._name)
 
 
-# This cache maps offsets in minutes to FixedOffset instances. It is
-# augmented on demand.
-tz_cache = {
-    0: FixedOffset(0),
+# This cache maps offsets in minutes to FixedOffset instances.
+tzinfo_cache = {
+    None: None,  # hack to simpify cached_tzinfo() callers
 }
-UTC = tz_cache[0]
+
+
+def cached_tzinfo(minutes):
+    """
+    Get a (cached) tzinfo instance for the specified offset in minutes.
+    """
+    try:
+        tzinfo = tzinfo_cache[minutes]
+    except KeyError:
+        tzinfo_cache[minutes] = tzinfo = FixedOffset(minutes)
+    return tzinfo
 
 
 #
@@ -208,12 +217,12 @@ class Moment(object):
         self._has_time = not (hour is None and minute is None
                               and second is None)
 
-        # This 'struct' contain the values that are relevant for
-        # comparison, hashing, and so on. Time zone information is not
-        # used here, since the actual parts must be in UTC in that case.
+        # This 'struct' contains the values that are relevant for
+        # comparison, hashing, and so on.
         self._struct = (
             self.year, self.month, self.day,
-            self.hour, self.minute, self.second, self.nanosecond)
+            self.hour, self.minute, self.second, self.nanosecond,
+            self.tz_offset)
 
     def __str__(self):
         buf = []
@@ -249,17 +258,13 @@ class Moment(object):
             else:
                 buf.append(".{0:09d}".format(self.nanosecond).rstrip("0"))
 
-        # Time zone representation is *not* just +hh:mm (like in ISO
-        # 8601 notation) since the semantics are different (temporenc
-        # stores info in UTC, not in local time).
         if self.tz_offset is not None:
             if self.tz_offset == 0:
-                buf.append(' (UTC)')
+                buf.append('Z')
             else:
                 h, m = divmod(self.tz_offset, 60)
                 sign = '+' if h >= 0 else '-'
-                buf.append(' (UTC; original offset {0}{1:02d}:{2:02d})'.format(
-                    sign, h, m))
+                buf.append('{0}{1:02d}:{2:02d}'.format(sign, h, m))
 
         return ''.join(buf)
 
@@ -299,7 +304,7 @@ class Moment(object):
     def __hash__(self):
         return hash(self._struct)
 
-    def datetime(self, strict=True, local=False):
+    def datetime(self, strict=True):
         """
         Convert this value to a ``datetime.datetime`` instance.
 
@@ -318,10 +323,7 @@ class Moment(object):
         use things like ``.strftime()`` on partial dates and times.
 
         The *temporenc* format allows inclusion of a time zone offset.
-        Date and time information in the *temporenc* types ``DTZ`` and
-        ``DTSZ`` is always stored as UTC, but the original UTC offset is
-        included, which makes conversion to the original local time
-        possible. When converting to a ``datetime`` instance, time zone
+        When converting to a ``datetime`` instance, time zone
         information is handled as follows:
 
         * When no time zone information was present in the original data
@@ -330,20 +332,11 @@ class Moment(object):
           attribute is `None`.
 
         * If the original data did include time zone information, the
-          return value will be a time zone aware instance. No conversion
-          to local time is performed by default, which means the
+          return value will be a time zone aware instance, which means the
           instance will have a ``tzinfo`` attribute corresponding to
-          UTC. This means time zone information will be lost, and the
-          return value will be in UTC.
-
-          If this is not desired, i.e. the application wants to access
-          the original local time, set the `local` argument to `True`.
-          In that case the data will be converted to local time, and the
-          return value will have a ``tzinfo`` attribute corresponding to
-          the time zone offset.
+          the offset included in the value.
 
         :param bool strict: whether to use strict conversion rules
-        :param bool local: whether to convert to local time
         :return: converted value
         :rtype: `datetime.datetime`
         """
@@ -382,29 +375,14 @@ class Moment(object):
             elif second == 60:  # assume that this is a leap second
                 second = 59
 
-        if self.tz_offset is None:
-            tz = None
-        elif local:
-            try:
-                tz = tz_cache[self.tz_offset]
-            except KeyError:
-                tz_cache[self.tz_offset] = tz = FixedOffset(self.tz_offset)
-        else:
-            tz = UTC
-
         dt = datetime.datetime(
             year, month, day,
             hour, minute, second, us,
-            tzinfo=tz)
-
-        if tz is not None and tz is not UTC:
-            # The tzinfo attribute is correct already, but the value
-            # itself hasn't been converted from UTC yet.
-            dt += dt.utcoffset()
+            tzinfo=cached_tzinfo(self.tz_offset))
 
         return dt
 
-    def date(self, strict=True, local=False):
+    def date(self, strict=True):
         """
         Convert this value to a ``datetime.date`` instance.
 
@@ -420,13 +398,12 @@ class Moment(object):
             if None in (self.year, self.month, self.day):
                 raise ValueError("incomplete date information")
 
-            if not local:
-                # Shortcut for performance reasons
-                return datetime.date(self.year, self.month, self.day)
+            # Shortcut for performance reasons
+            return datetime.date(self.year, self.month, self.day)
 
-        return self.datetime(strict=False, local=local).date()
+        return self.datetime(strict=False).date()
 
-    def time(self, strict=True, local=False):
+    def time(self, strict=True):
         """
         Convert this value to a ``datetime.time`` instance.
 
@@ -442,14 +419,13 @@ class Moment(object):
             if None in (self.hour, self.minute, self.second):
                 raise ValueError("incomplete time information")
 
-            if not local:
-                # Shortcut for performance reasons
-                return datetime.time(
-                    self.hour, self.minute, self.second,
-                    self.microsecond if self.microsecond is not None else 0,
-                    tzinfo=None if self.tz_offset is None else UTC)
+            # Shortcut for performance reasons
+            return datetime.time(
+                self.hour, self.minute, self.second,
+                self.microsecond if self.microsecond is not None else 0,
+                tzinfo=cached_tzinfo(self.tz_offset))
 
-        return self.datetime(strict=False, local=local).timetz()
+        return self.datetime(strict=False).timetz()
 
 
 def packb(
@@ -525,30 +501,12 @@ def packb(
 
             # Handle time zone information. Instances of the
             # datetime.datetime and datetime.time classes may have an
-            # associated time zone. If that is the case, convert the
-            # instance to UTC and remember the UTC offset. If an
-            # explicit tz_offset arg was passed to this function, that
-            # one has precedence, and no conversion will happen.
+            # associated time zone. If an explicit tz_offset was
+            # specified, that takes precedence.
             if tz_offset is None:
                 delta = value.utcoffset()
                 if delta is not None:
                     tz_offset = delta.days * 1440 + delta.seconds // 60
-                    # Note: the tzinfo attribute of the converted value
-                    # (in UTC) is not used, so this code does not bother
-                    # setting it.
-                    if isinstance(value, datetime.datetime):
-                        # Since datetime.datetime instances support
-                        # arithmentic, this is one is simple.
-                        value = value - delta
-                    else:
-                        # Since datetime.time instances do not support
-                        # arithmetic, change hour and minute fields
-                        # manually. The *args hack with divmod()'s
-                        # return value is just to avoid introducing even
-                        # more local variables.
-                        value = value.replace(*divmod(
-                            (value.hour * 60 + value.minute - tz_offset)
-                            % 1440, 60))
 
             # Extract time fields
             handled = True
